@@ -346,6 +346,7 @@ async function generateDocx(b64, args, opts = {}) {
     delimiters    : { start: '{{', end: '}}' }, // template pakai {{tag}}, bukan {tag}
     nullGetter    : () => '',
   });
+  console.log('DEBUG peserta_lampiran:', args.peserta_lampiran); // TODO: hapus setelah debug
   doc.render(args);
   let blob = new Blob([doc.getZip().generate({ type: 'arraybuffer' })], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

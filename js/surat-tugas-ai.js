@@ -525,6 +525,7 @@ async function staiGenerateDocx() {
       delimiters    : { start: '{{', end: '}}' },
       nullGetter    : () => '',
     });
+    console.log('DEBUG peserta_lampiran (surat-tugas-ai):', args.peserta_lampiran); // TODO: hapus setelah debug
     doc.render(args);
 
     const out  = doc.getZip().generate({ type: 'arraybuffer' });
@@ -582,6 +583,17 @@ function staiBuildArgs() {
     indexed[`golongan_peserta_${i}`] = p ? p.golongan || '' : '';
   }
 
+  // ── Array untuk loop tabel Lampiran ──────────────────────
+  // Harus sejalan dengan buildBaseArgs() di js/generate.js — template
+  // Surat Tugas pakai {{#peserta_lampiran}} ... {{/peserta_lampiran}}.
+  // Path generate ini punya args sendiri (tidak lewat buildBaseArgs),
+  // jadi key-nya wajib ikut dibangun di sini juga.
+  const pesertaLampiran = peserta.map((p, i) => ({
+    no      : i + 1,
+    nama    : p.nama_lengkap || '',
+    jabatan : p.jabatan      || '',
+  }));
+
   // ── Tanggal helpers ───────────────────────────────────────
   const tglSurat   = f.tanggal_surat   || f.tanggal_mulai  || '';
   const tglMulai   = f.tanggal_mulai   || '';
@@ -601,6 +613,7 @@ function staiBuildArgs() {
     tanggal_kembali    : formatTanggal(tglSelesai),
     dasar              : f.dasar            || '',
     deskripsi_tugas    : f.deskripsi_tugas  || '',
+    tujuan             : f.tujuan_instansi  || '',
 
     // ─── Computed Arguments ───────────────────────────────
     lama_perjalanan    : lama > 0 ? terbilangHari(lama) : '',
@@ -626,6 +639,9 @@ function staiBuildArgs() {
     // ─── Tabel Peserta — Surat Tugas ──────────────────────
     jumlah_peserta     : peserta.length,
     ...indexed,
+
+    // ─── Loop array (tabel Lampiran dinamis) ──────────────
+    peserta_lampiran   : pesertaLampiran,
   };
 }
 

@@ -73,6 +73,16 @@ function buildBaseArgs(pjd) {
     pesertaIndexed[`golongan_peserta_${n}`]    = pgw?.golongan || '';
   });
 
+  // Array untuk loop tabel Lampiran (mis. Surat Perintah/Surat Tugas dengan
+  // daftar nama yang jumlahnya dinamis). Dipakai di template .docx dengan
+  // syntax loop docxtemplater: {{#peserta_lampiran}} ... {{/peserta_lampiran}}
+  // — DOBEL kurawal karena project ini pakai delimiters custom {{ }},
+  // bukan default { } bawaan docxtemplater.
+  const pesertaLampiran = sorted.map((ps, i) => {
+    const pgw = getPegawaiById(ps.pegawai_id);
+    return { no: i + 1, nama: pgw?.nama_lengkap || '', jabatan: pgw?.jabatan || '' };
+  });
+
   // Build per-N rekap args
   const rekapN = {};
   sorted.forEach((ps, i) => {
@@ -150,6 +160,9 @@ function buildBaseArgs(pjd) {
 
     // ── Indexed peserta (untuk SPPD tabel pengikut) ──────
     ...pesertaIndexed,
+
+    // ── Loop array (untuk tabel Lampiran dinamis) ────────
+    peserta_lampiran   : pesertaLampiran,
 
     // ── Per-N rekap args ─────────────────────────────────
     ...rekapN,

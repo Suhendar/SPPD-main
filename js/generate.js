@@ -109,6 +109,8 @@ function buildBaseArgs(pjd) {
     tanggal_surat      : formatTanggal(pjd.tanggal_surat),
     tanggal_berangkat  : formatTanggal(pjd.tanggal_berangkat),
     tanggal_kembali    : formatTanggal(pjd.tanggal_kembali),
+    jam_mulai          : pjd.jam_mulai || '',
+    jam_selesai        : pjd.jam_selesai || '',
     lama_perjalanan    : terbilangHari(lama),
     jenis_perjalanan   : tingkat,
     tingkat_biaya      : tingkat,

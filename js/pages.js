@@ -122,6 +122,8 @@ PAGES.panduan = `
   ['tanggal_surat','✏️ Manual','manual','Tanggal surat dibuat (bukan tanggal berangkat)','02 Januari 2026'],
   ['tanggal_berangkat','✏️ Manual','manual','Tanggal mulai perjalanan dinas','15 April 2026'],
   ['tanggal_kembali','✏️ Manual','manual','Tanggal selesai / kembali dari perjalanan','15 April 2026'],
+  ['jam_mulai','✏️ Manual','manual','Jam mulai keberangkatan (opsional)','08:00'],
+  ['jam_selesai','✏️ Manual','manual','Jam selesai / kembali (opsional)','17:00'],
   ['alat_angkutan','✏️ Manual','manual','Alat angkutan yang digunakan','Kendaraan Roda 4'],
   ['tingkat_biaya','⚡ Computed','computed','Tingkat biaya perjalanan dari jenis perjalanan yang dipilih','Dalam Daerah'],
   ['tujuan','✏️ Manual','manual','Kecamatan tujuan (dalam daerah) — bisa dioverride manual pakai nama tempat spesifik (field "Nama Tempat"), atau alamat lengkap (luar daerah/provinsi)','Kantor Kecamatan Kemang / Kecamatan Tenjolaya'],

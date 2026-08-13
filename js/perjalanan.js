@@ -400,23 +400,22 @@ function renderStep1(body) {
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Jam Mulai</label>
-            <input type="time" class="form-control" id="f-jam-mulai" value="${f.jam_mulai||''}"
-              onchange="PJD.form.jam_mulai=this.value">
-            <div class="form-text">Jam keberangkatan (opsional)</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Jam Selesai</label>
-            <input type="time" class="form-control" id="f-jam-selesai" value="${f.jam_selesai||''}"
-              onchange="PJD.form.jam_selesai=this.value">
-            <div class="form-text">Jam selesai / kembali (opsional)</div>
-          </div>
-        </div>
-
         <div id="lama-preview" style="display:none" class="alert alert-success" style="margin-bottom:14px">
           📅 <span id="lama-text"></span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jam Mulai <span class="text-muted">(opsional)</span></label>
+            <input type="time" class="form-control" id="f-jammulai" value="${f.jam_mulai||''}"
+              oninput="PJD.form.jam_mulai=this.value" onchange="PJD.form.jam_mulai=this.value">
+            <div class="form-text">Mengisi placeholder {{jam_mulai}} / {{jam}} di baris "Pukul :"</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jam Selesai <span class="text-muted">(opsional)</span></label>
+            <input type="time" class="form-control" id="f-jamselesai" value="${f.jam_selesai||''}"
+              oninput="PJD.form.jam_selesai=this.value" onchange="PJD.form.jam_selesai=this.value">
+          </div>
         </div>
 
         <div class="form-row">
@@ -927,8 +926,6 @@ function renderStep4(body) {
       <div class="ringkasan-row"><div class="ringkasan-label">Tanggal Surat</div><div class="ringkasan-value">${f.tanggal_surat ? formatTanggal(f.tanggal_surat) : '—'}</div></div>
       <div class="ringkasan-row"><div class="ringkasan-label">Tanggal Berangkat</div><div class="ringkasan-value">${f.tanggal_berangkat ? formatTanggal(f.tanggal_berangkat)+' ('+namaHari(f.tanggal_berangkat)+')' : '—'}</div></div>
       <div class="ringkasan-row"><div class="ringkasan-label">Tanggal Kembali</div><div class="ringkasan-value">${f.tanggal_kembali ? formatTanggal(f.tanggal_kembali)+' ('+namaHari(f.tanggal_kembali)+')' : '—'}</div></div>
-      <div class="ringkasan-row"><div class="ringkasan-label">Jam Mulai</div><div class="ringkasan-value">${f.jam_mulai || '—'}</div></div>
-      <div class="ringkasan-row"><div class="ringkasan-label">Jam Selesai</div><div class="ringkasan-value">${f.jam_selesai || '—'}</div></div>
       <div class="ringkasan-row"><div class="ringkasan-label">Lama Perjalanan</div><div class="ringkasan-value">${lama > 0 ? terbilangHari(lama) : '—'}</div></div>
       <div class="ringkasan-row"><div class="ringkasan-label">Jenis Perjalanan</div><div class="ringkasan-value">${getTingkatBiaya(f.jenis_perjalanan)}</div></div>
       <div class="ringkasan-row"><div class="ringkasan-label">Tujuan</div><div class="ringkasan-value">${tujuan}</div></div>

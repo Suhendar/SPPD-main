@@ -89,7 +89,7 @@ function calcPeserta(p) {
   const harian = getUangHarian(PJD.form);
   const totalHarian    = harian * lama;
   const totalTransport = p.dapat_transport
-    ? (parseInt(p.nominal_transport) || 0) * (parseInt(p.jumlah_kali) || 1) * lama
+    ? (parseInt(p.nominal_transport) || 0) * (parseInt(p.jumlah_kali) || 1)
     : 0;
   return {
     ...p,
@@ -264,7 +264,7 @@ function calcPesertaStatic(ps, jenis, lama, override) {
   const hasOverride = override !== null && override !== undefined && override !== '';
   const harian = hasOverride ? (parseInt(override) || 0) : (tarif[jenis]?.uang_harian || 0);
   const totalT = ps.dapat_transport
-    ? (parseInt(ps.nominal_transport)||0) * (parseInt(ps.jumlah_kali)||1) * lama : 0;
+    ? (parseInt(ps.nominal_transport)||0) * (parseInt(ps.jumlah_kali)||1) : 0;
   return { ...ps, total: harian * lama + totalT };
 }
 
@@ -286,10 +286,10 @@ function editPerjalanan(id) {
 
 function deletePerjalanan(id) {
   const p = getPJDList().find(x => x.id === id);
-  if (!confirm(`Hapus perjalanan "${p?.nomor_surat}"?`)) return;
-  savePJDList(getPJDList().filter(x => x.id !== id));
+  if (!confirm(`Pindahkan perjalanan "${p?.nomor_surat}" ke Trash?`)) return;
+  DB.moveToTrash(KEYS.perjalanan, id, p?.nomor_surat || 'Perjalanan dinas');
   renderPerjalananList();
-  toast('Perjalanan dinas dihapus', 'success');
+  toast('Perjalanan dinas dipindahkan ke Trash', 'success');
 }
 
 // ─── WIZARD CONTAINER ─────────────────────────────────────
@@ -338,6 +338,10 @@ function renderStep(n) {
   const prev = document.getElementById('btn-prev');
   const next = document.getElementById('btn-next');
   if (!body) return;
+
+  // Step 2 inputs live in the DOM. Sync them before Step 4 renders its totals,
+  // including the case where the suggested nominal was already prefilled.
+  if (n === 4) syncPesertaTransportFromDOM();
 
   if (prev) prev.style.display = n === 1 ? 'none' : '';
   if (next) next.textContent = n === PJD.totalSteps ? '💾 Simpan Perjalanan' : 'Lanjut →';
@@ -612,7 +616,7 @@ function renderStep2(body) {
           <div id="calc-content"><div style="opacity:.5;font-size:13px">Pilih peserta untuk melihat kalkulasi</div></div>
         </div>
         <div class="alert alert-info">
-          💡 <strong>Transport:</strong> Nominal × Jumlah Kali × ${getLamaPerjalanan() || '?'} Hari<br>
+          💡 <strong>Transport:</strong> Nominal per kali × Jumlah Kali (tidak dikalikan jumlah hari)<br>
           ${(PJD.form.jenis_perjalanan || 'dalam_kota') === 'dalam_kota'
             ? 'Hanya <strong>satu peserta</strong> yang dapat biaya transport (dalam kota).'
             : 'Untuk luar daerah/provinsi, <strong>setiap peserta</strong> boleh diisi transport masing-masing.'}
@@ -684,9 +688,8 @@ function renderPesertaItem(pgw) {
 function calcTransportFormula(p) {
   const nom  = parseInt(p.nominal_transport) || 0;
   const kali = parseInt(p.jumlah_kali) || 1;
-  const lama = getLamaPerjalanan() || 1;
-  const total = nom * kali * lama;
-  return `${formatRupiah(nom)} × ${kali} kali × ${lama} hari = <strong>${formatRupiah(total)}</strong>`;
+  const total = nom * kali;
+  return `${formatRupiah(nom)} × ${kali} kali = <strong>${formatRupiah(total)}</strong>`;
 }
 
 function togglePeserta(pegawaiId) {
@@ -704,10 +707,11 @@ function togglePeserta(pegawaiId) {
     document.getElementById('ptotal-' + pegawaiId).textContent = '';
   } else {
     // Add
+    const suggestTransport = getSuggestTransport();
     PJD.form.peserta.push({
       pegawai_id: pegawaiId,
       dapat_transport: false,
-      nominal_transport: 0,
+      nominal_transport: suggestTransport || 0,
       jumlah_kali: 1,
     });
     item.classList.add('selected');
@@ -752,7 +756,9 @@ function toggleTransport(pegawaiId, checked) {
   const item = document.getElementById('pitem-' + pegawaiId);
   if (item) {
     item.classList.toggle('has-transport', checked);
-    item.classList.toggle('selected', !checked);
+    // The participant remains selected while transport is toggled.
+    // Removing `selected` collapses the whole transport panel via CSS.
+    item.classList.add('selected');
   }
 
   if (checked) {
@@ -760,8 +766,27 @@ function toggleTransport(pegawaiId, checked) {
     const nomInput = document.getElementById('pnom-' + pegawaiId);
     if (nomInput && !nomInput.value && suggest) {
       nomInput.value = suggest;
-      if (p) p.nominal_transport = suggest;
     }
+    // Keep a state fallback as well. This covers a checkbox event firing before
+    // the hidden nominal input is available in the DOM.
+    if (p) {
+      p.nominal_transport = parseInt(nomInput?.value) || suggest || 0;
+      p.jumlah_kali = parseInt(document.getElementById('pkali-' + pegawaiId)?.value) || 1;
+    }
+    // BUG FIX: sebelumnya nominal_transport cuma ke-set ke state kalau kolom
+    // "Nominal per Kali" masih KOSONG pas checkbox dicentang. Padahal kolom
+    // itu selalu udah ke-render duluan dengan value saran tarif (lihat
+    // renderPesertaItem — `existing?.nominal_transport || suggestTransport || ''`),
+    // walau div-nya masih disembunyikan sebelum dicentang. Akibatnya begitu user
+    // centang "dapat transport", angka saran itu cuma numpang tampil di layar
+    // tapi nggak pernah kesimpen ke PJD.form.peserta — total transport ke-hitung
+    // Rp 0 meski kolomnya kelihatan ada isinya.
+    // Fix: selalu sinkronkan nilai kolom yang lagi tampil ke state peserta,
+    // apapun asal nilainya (saran otomatis, isian lama, atau kosong) — dan ini
+    // fungsi yang sama yang dipakai oninput kolom, jadi formula + kalkulasi
+    // panel ikut ke-refresh konsisten.
+    updatePesertaTransport(pegawaiId);
+    return;
   }
 
   refreshPesertaTotal(pegawaiId);
@@ -771,12 +796,25 @@ function toggleTransport(pegawaiId, checked) {
 function updatePesertaTransport(pegawaiId) {
   const p = PJD.form.peserta.find(x => x.pegawai_id === pegawaiId);
   if (!p) return;
-  p.nominal_transport = parseInt(document.getElementById('pnom-' + pegawaiId)?.value) || 0;
-  p.jumlah_kali       = parseInt(document.getElementById('pkali-' + pegawaiId)?.value) || 1;
+  const nominalInput = document.getElementById('pnom-' + pegawaiId);
+  const kaliInput = document.getElementById('pkali-' + pegawaiId);
+  if (nominalInput) p.nominal_transport = parseInt(nominalInput.value) || 0;
+  if (kaliInput) p.jumlah_kali = parseInt(kaliInput.value) || 1;
   const formulaEl = document.getElementById('ptrans-formula-' + pegawaiId);
   if (formulaEl) formulaEl.innerHTML = calcTransportFormula(p);
   refreshPesertaTotal(pegawaiId);
   updateCalcPanel();
+}
+
+function syncPesertaTransportFromDOM() {
+  PJD.form.peserta.forEach(p => {
+    const transportChk = document.getElementById('ptrans-chk-' + p.pegawai_id);
+    const nominalInput  = document.getElementById('pnom-' + p.pegawai_id);
+    const kaliInput     = document.getElementById('pkali-' + p.pegawai_id);
+    if (transportChk) p.dapat_transport = transportChk.checked;
+    if (nominalInput) p.nominal_transport = parseInt(nominalInput.value) || 0;
+    if (kaliInput) p.jumlah_kali = parseInt(kaliInput.value) || 1;
+  });
 }
 
 function refreshPesertaTotal(pegawaiId) {
@@ -912,7 +950,7 @@ function renderStep4(body) {
         <td><strong>${pgw?.nama_lengkap||'?'}</strong><br><span class="text-muted text-sm">${pgw?.pangkat||''} ${pgw?.golongan?'/ '+pgw.golongan:''}</span></td>
         <td>${formatRupiah(cp.uang_harian)} × ${lama} hari<br><strong>${formatRupiah(cp.total_uang_harian)}</strong></td>
         <td>${p.dapat_transport
-          ? `${formatRupiah(nom)} × ${kali} kali × ${lama} hari<br><strong>${formatRupiah(cp.total_transport)}</strong>`
+          ? `${formatRupiah(nom)} × ${kali} kali<br><strong>${formatRupiah(cp.total_transport)}</strong>`
           : '<span class="text-muted">—</span>'}</td>
         <td><strong style="color:var(--navy)">${formatRupiah(cp.total)}</strong></td>
         <td><span class="tbl-mono text-sm">${pgw?.nomor_rekening||'—'}</span></td>
@@ -977,6 +1015,7 @@ function renderStep4(body) {
 
 // ─── WIZARD NAVIGATION ────────────────────────────────────
 function wizardNext() {
+  if (PJD.currentStep === 2) syncPesertaTransportFromDOM();
   if (!validateStep(PJD.currentStep)) return;
   if (PJD.currentStep === PJD.totalSteps) {
     savePerjalanan();

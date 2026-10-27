@@ -286,6 +286,8 @@ function editPerjalanan(id) {
 
 function deletePerjalanan(id) {
   const p = getPJDList().find(x => x.id === id);
+  const budgetGuard = Anggaran.canDeletePerjalanan(p);
+  if (!budgetGuard.ok) return toast(budgetGuard.message, 'warning', 5000);
   if (!confirm(`Pindahkan perjalanan "${p?.nomor_surat}" ke Trash?`)) return;
   DB.moveToTrash(KEYS.perjalanan, id, p?.nomor_surat || 'Perjalanan dinas');
   renderPerjalananList();
@@ -476,13 +478,14 @@ function renderStep1(body) {
           </div>
           <div class="form-group">
             <label class="form-label">Kode Rekening SIPD</label>
-            <select class="form-control" id="f-sipd" onchange="PJD.form.kode_sipd_id=this.value">
+            <select class="form-control" id="f-sipd" onchange="PJD.form.kode_sipd_id=this.value;Anggaran.refreshSelectionHint()">
               <option value="">— Pilih atau isi manual —</option>
               ${sipds.map(s => `<option value="${s.id}" ${f.kode_sipd_id===s.id?'selected':''}>${s.nama_singkat||s.sub_kegiatan} (${s.kode})</option>`).join('')}
             </select>
             <input class="form-control" id="f-sipd-manual" style="margin-top:8px"
               value="${f.kode_sipd_manual||''}" placeholder="Atau ketik kode manual: 5.1.02.04.001.00003"
               oninput="PJD.form.kode_sipd_manual=this.value">
+            <div id="anggaran-sipd-hint">${Anggaran.selectionHint(f)}</div>
           </div>
         </div>
       </div>
@@ -707,6 +710,12 @@ function togglePeserta(pegawaiId) {
     document.getElementById('ptotal-' + pegawaiId).textContent = '';
   } else {
     // Add
+    const conflicts = findParticipantScheduleConflicts(PJD.form, [pegawaiId]);
+    if (conflicts.length > 0) {
+      if (chk) chk.checked = false;
+      toast(formatParticipantConflictMessage(conflicts[0]), 'error', 7000);
+      return;
+    }
     const suggestTransport = getSuggestTransport();
     PJD.form.peserta.push({
       pegawai_id: pegawaiId,
@@ -1003,6 +1012,8 @@ function renderStep4(body) {
       </div>
     </div>
 
+    ${Anggaran.finalPreview(f)}
+
     <div class="flex gap-3 items-center" style="margin-top:4px">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
         <input type="checkbox" id="f-final" ${f.status==='final'?'checked':''}
@@ -1032,6 +1043,44 @@ function wizardPrev() {
 }
 
 // ─── VALIDATION ───────────────────────────────────────────
+function findParticipantScheduleConflicts(form, participantIds = null) {
+  if (!form?.tanggal_berangkat || !form?.tanggal_kembali) return [];
+
+  const selectedIds = new Set(
+    participantIds || (form.peserta || []).map(p => p.pegawai_id)
+  );
+  const currentId = PJD.editId || form.id || null;
+  const start = form.tanggal_berangkat;
+  const end = form.tanggal_kembali;
+  const conflicts = [];
+
+  getPJDList().forEach(perjalanan => {
+    if (perjalanan.id === currentId) return;
+    if (!perjalanan.tanggal_berangkat || !perjalanan.tanggal_kembali) return;
+
+    const overlaps = start <= perjalanan.tanggal_kembali
+      && end >= perjalanan.tanggal_berangkat;
+    if (!overlaps) return;
+
+    (perjalanan.peserta || []).forEach(peserta => {
+      if (selectedIds.has(peserta.pegawai_id)) {
+        conflicts.push({ pegawaiId: peserta.pegawai_id, perjalanan });
+      }
+    });
+  });
+
+  return conflicts;
+}
+
+function formatParticipantConflictMessage(conflict) {
+  const pegawai = getPegawaiById(conflict.pegawaiId);
+  const perjalanan = conflict.perjalanan;
+  const rentang = perjalanan.tanggal_berangkat === perjalanan.tanggal_kembali
+    ? formatTanggal(perjalanan.tanggal_berangkat)
+    : `${formatTanggal(perjalanan.tanggal_berangkat)} s.d. ${formatTanggal(perjalanan.tanggal_kembali)}`;
+  return `${pegawai?.nama_lengkap || 'Peserta'} sudah terdaftar pada perjalanan ${perjalanan.nomor_surat || 'lain'} tanggal ${rentang}`;
+}
+
 function validateStep(n) {
   const f = PJD.form;
   if (n === 1) {
@@ -1049,21 +1098,34 @@ function validateStep(n) {
   if (n === 2) {
     if (f.peserta.length === 0)
       return toast('Pilih minimal satu peserta', 'error'), false;
+    const conflicts = findParticipantScheduleConflicts(f);
+    if (conflicts.length > 0)
+      return toast(formatParticipantConflictMessage(conflicts[0]), 'error', 7000), false;
   }
   return true;
 }
 
 // ─── SAVE ─────────────────────────────────────────────────
 function savePerjalanan() {
+  const conflicts = findParticipantScheduleConflicts(PJD.form);
+  if (conflicts.length > 0) {
+    toast(formatParticipantConflictMessage(conflicts[0]), 'error', 7000);
+    return;
+  }
   const list = getPJDList();
   const id   = PJD.editId || ('pjd_' + Date.now());
   PJD.form.id = id;
   PJD.form.updated_at = new Date().toISOString();
 
   const idx = list.findIndex(x => x.id === id);
+  const previous = idx >= 0 ? list[idx] : null;
+  const budgetResult = Anggaran.preparePerjalananSave(previous, PJD.form);
+  if (!budgetResult.ok) return toast(budgetResult.message, 'error', 5000);
+  PJD.form = budgetResult.record;
   if (idx >= 0) list[idx] = PJD.form;
   else list.push(PJD.form);
   savePJDList(list);
+  Anggaran.commitPrepared(budgetResult);
 
   const label = PJD.form.status === 'final' ? 'final' : 'draft';
   toast(`Perjalanan dinas disimpan sebagai ${label}`, 'success');

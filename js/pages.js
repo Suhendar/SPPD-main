@@ -19,6 +19,8 @@ PAGES.dashboard = `
   <div class="stat-card red"><span class="stat-icon">👥</span><div class="stat-value" id="stat-pegawai">0</div><div class="stat-label">Data Pegawai</div></div>
 </div>
 
+<div id="dashboard-anggaran" class="mb-6"></div>
+
 <div class="grid-2">
   <div class="card">
     <div class="card-header">
@@ -139,20 +141,20 @@ PAGES.panduan = `
   ['hari_tanggal_tugas','⚡ Computed','computed','Rangkaian hari dan tanggal untuk Surat Tugas<br><span class="text-muted text-sm">Nama hari + format tanggal lengkap</span>','Rabu, 15 April 2026'],
   ['jam','⚡ Computed','computed','Gabungan jam mulai & selesai untuk baris "Pukul :"<br><span class="text-muted text-sm">jam_mulai s.d. jam_selesai — kalau cuma jam_mulai terisi, tampil itu saja; kosong jika keduanya kosong</span>','08.00 s.d. 16.00'],
   ['kota_tanggal','⚡ Computed','computed','Baris kota dan tanggal untuk TTD<br><span class="text-muted text-sm">unit_kerja.kota + ", " + tanggal_surat</span>','Cibinong, 01 Oktober 2025'],
-  ['untuk_pembayaran','⚡ Computed','computed','Teks "Untuk Pembayaran" di kwitansi<br><span class="text-muted text-sm">"Biaya Uang Harian [dan Transport] Perjalanan Dinas [jenis] ke [tujuan]" — [tujuan] ikut nama tempat manual kalau diisi</span>','Biaya Uang Harian dan Transport Perjalanan Dinas Dalam Daerah ke Kantor Kecamatan Kemang'],
+  ['untuk_pembayaran','⚡ Computed','computed','Teks singkat "Untuk Pembayaran" di kwitansi tanpa maksud kegiatan<br><span class="text-muted text-sm">Untuk perjalanan dalam kota, tujuan memakai nama kecamatan dan bukan nama tempat</span>','Biaya Uang Harian Perjalanan Dinas Dalam Daerah ke Kecamatan Kemang'],
   ['uang_harian','⚡ Computed','computed','Nominal uang harian per peserta<br><span class="text-muted text-sm">tarif_uang_harian[jenis_perjalanan] — bisa dioverride manual di Step 1 (field "Uang Harian")</span>','Rp 170.000'],
-  ['transport','⚡ Computed','computed','Total transport per peserta (0 jika tidak dapat)<br><span class="text-muted text-sm">nominal_transport × jumlah_kali</span>','Rp 300.000'],
-  ['total','⚡ Computed','computed','Total per peserta (kwitansi)<br><span class="text-muted text-sm">uang_harian + transport</span>','Rp 310.000'],
-  ['total_terbilang','⚡ Computed','computed','Total per peserta dalam kata-kata Bahasa Indonesia','Tiga Ratus Sepuluh Ribu Rupiah'],
+  ['transport','⚡ Computed','computed','Total transport peserta jika opsi sertakan transport dicentang; selain itu kosong','—'],
+  ['total','⚡ Computed','computed','Total kwitansi per peserta sesuai pilihan transport<br><span class="text-muted text-sm">uang_harian × lama perjalanan + transport jika disertakan</span>','Rp 170.000'],
+  ['total_terbilang','⚡ Computed','computed','Total kwitansi sesuai pilihan transport dalam kata-kata Bahasa Indonesia','Seratus Tujuh Puluh Ribu Rupiah'],
   ['grand_total','⚡ Computed','computed','Total keseluruhan semua peserta (Rekap Belanja)<br><span class="text-muted text-sm">SUM semua total peserta</span>','Rp 1.660.000'],
   ['grand_total_terbilang','⚡ Computed','computed','Grand total dalam kata-kata Bahasa Indonesia','Satu Juta Enam Ratus Enam Puluh Ribu Rupiah'],
-  ['nominal','⚡ Computed','computed','Total format angka di kwitansi (tanpa "Rp")','310,000'],
+  ['nominal','⚡ Computed','computed','Total kwitansi sesuai pilihan transport dalam format angka (tanpa "Rp")','170,000'],
 ]) + argSection('📊','#F3E5F5','Rekap Belanja & Anggaran','Khusus template Rekap — auto-fill dari kode rekening SIPD',[
   ['program','🔄 Auto','auto','Nama program dari kode rekening SIPD','Penunjang Urusan Pemerintahan Daerah Kabupaten/Kota'],
   ['kegiatan','🔄 Auto','auto','Nama kegiatan dari kode rekening SIPD','Perencanaan, Penganggaran dan Evaluasi Kinerja Perangkat Daerah'],
   ['sub_kegiatan','🔄 Auto','auto','Nama sub kegiatan dari kode rekening SIPD','Evaluasi Kinerja Perangkat Daerah'],
   ['nomor_sppd','🔄 Auto','auto','Nomor SPPD (sama dengan {{nomor}})','800.1.11.1/1338-Sekretariat'],
-  ['tujuan_perjalanan','⚡ Computed','computed','Deskripsi tujuan lengkap untuk rekap<br><span class="text-muted text-sm">Gabungan: deskripsi_tugas + hari_tanggal + alamat tujuan</span>','Koordinasi Terkait... pada hari Selasa, 30 Desember 2025, di Jl. Medan Merdeka Barat...'],
+  ['tujuan_perjalanan','⚡ Computed','computed','Maksud perjalanan dan tempat tujuan untuk rekap<br><span class="text-muted text-sm">Format: Dalam rangka [maksud perjalanan] ke [tempat tujuan], tanpa tanggal</span>','Dalam rangka koordinasi pengelolaan keuangan ke BPKAD'],
   ['tanggal_rekap','🔄 Auto','auto','Tanggal rekap belanja (sama dengan tanggal_berangkat)','30 Desember 2025'],
   ['kota_tanggal_rekap','⚡ Computed','computed','Baris kota dan tanggal di TTD rekap belanja','Cibinong, 30 Desember 2025'],
 ]) + argSection('📄','#E8F5E9','Kwitansi Per Halaman (1–3 peserta)','Argument untuk template kwitansi dengan layout 1 lembar = 1–3 peserta. Gunakan suffix _1, _2, _3 untuk masing-masing kwitansi di halaman yang sama.',
@@ -178,10 +180,10 @@ PAGES.panduan = `
   ['jabatan_penerima','🔁 Loop','loop','Jabatan peserta (iterasi saat ini)','Plt. Kepala Sub Bagian Umum'],
   ['rekening_penerima','🔁 Loop','loop','Nomor rekening bank peserta (iterasi saat ini)','0483210024282'],
   ['uang_harian_peserta','🔁 Loop','loop','Uang harian peserta ini (format Rp)','Rp 170.000'],
-  ['transport_peserta','🔁 Loop','loop','Transport peserta ini (0 jika tidak dapat transport)','Rp 140.000'],
-  ['total_peserta','🔁 Loop','loop','Total peserta ini (uang harian + transport)','Rp 310.000'],
-  ['total_peserta_terbilang','🔁 Loop','loop','Total peserta ini dalam kata-kata Bahasa Indonesia','Tiga Ratus Sepuluh Ribu Rupiah'],
-  ['nominal_peserta','🔁 Loop','loop','Total peserta format angka untuk kwitansi','310,000'],
+  ['transport_peserta','🔁 Loop','loop','Total transport peserta jika opsi sertakan transport dicentang; selain itu kosong','—'],
+  ['total_peserta','🔁 Loop','loop','Total kwitansi peserta ini sesuai pilihan transport','Rp 170.000'],
+  ['total_peserta_terbilang','🔁 Loop','loop','Total kwitansi peserta ini sesuai pilihan transport dalam kata-kata Bahasa Indonesia','Seratus Tujuh Puluh Ribu Rupiah'],
+  ['nominal_peserta','🔁 Loop','loop','Total kwitansi peserta sesuai pilihan transport dalam format angka','170,000'],
   ['urutan_peserta','🔁 Loop','loop','Nomor urut peserta dalam daftar (1, 2, 3...)','1'],
 ],
 '<div class="alert alert-warning">⚠️ Argument loop hanya berlaku pada template kwitansi dengan layout <strong>1 lembar = 1 peserta</strong>. Peserta diurutkan berdasarkan golongan tertinggi ke terendah.</div>'
@@ -383,13 +385,15 @@ PAGES.master = `
   <button class="tab-btn" onclick="switchTab('kecamatan',this)">🗺️ Kecamatan &amp; Transport</button>
   <button class="tab-btn" onclick="switchTab('kota-tujuan',this)">🏙️ Kota Tujuan</button>
   <button class="tab-btn" onclick="switchTab('sipd',this)">📑 Kode Rekening SIPD</button>
+  <button class="tab-btn" onclick="switchTab('anggaran',this)">💼 Anggaran &amp; Koreksi</button>
 </div>
 <div id="tab-unit-kerja" class="tab-pane active"></div>
 <div id="tab-pegawai"    class="tab-pane"></div>
 <div id="tab-tarif"      class="tab-pane"></div>
 <div id="tab-kecamatan"  class="tab-pane"></div>
 <div id="tab-kota-tujuan" class="tab-pane"></div>
-<div id="tab-sipd"       class="tab-pane"></div>`;
+<div id="tab-sipd"       class="tab-pane"></div>
+<div id="tab-anggaran"   class="tab-pane"></div>`;
 
 PAGES.perjalanan = `<div id="perjalanan-container"></div>`;
 
@@ -448,6 +452,7 @@ function updateStats() {
   set('stat-perjalanan', DB.getArr(KEYS.perjalanan).length);
   set('stat-pegawai',    DB.getArr(KEYS.pegawai).length);
   set('stat-generated',  DB.getArr(KEYS.generated).length);
+  if (typeof Anggaran !== 'undefined') Anggaran.renderDashboard();
 }
 
 // ─── ROUTER ──────────────────────────────────────────────

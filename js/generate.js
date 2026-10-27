@@ -56,6 +56,13 @@ function buildBaseArgs(pjd) {
   const tingkat= getTingkatBiaya(pjd.jenis_perjalanan);
   const grand  = calcGrandTotalFull(pjd);
   const kodeRek= sipd ? sipd.kode : (pjd.kode_sipd_manual || '');
+  const maksud = (pjd.maksud_perjalanan || '').trim();
+  const dalamRangka = maksud && /^dalam\s+rangka\b/i.test(maksud)
+    ? maksud
+    : (maksud ? `Dalam rangka ${maksud}` : '');
+  const tujuanPerjalanan = dalamRangka
+    ? `${dalamRangka} ke ${tujuan}`
+    : tujuan;
 
   // Jam mulai/selesai — opsional, dipakai template di baris "Pukul :".
   const jamMulai   = formatJam(pjd.jam_mulai);
@@ -156,7 +163,7 @@ function buildBaseArgs(pjd) {
     kegiatan           : sipd?.kegiatan || '',
     sub_kegiatan       : sipd?.sub_kegiatan || '',
     nama_singkat_sipd  : sipd?.nama_singkat || '',
-    tujuan_perjalanan  : [pjd.deskripsi_tugas, formatHariTanggalTugas(pjd.tanggal_berangkat, pjd.tanggal_kembali), tujuan ? 'di ' + tujuan : ''].filter(Boolean).join(', pada '),
+    tujuan_perjalanan  : tujuanPerjalanan,
 
     // ── PPTK ────────────────────────────────────────────
     nama_pptk          : pptk?.nama_lengkap || '',
@@ -194,17 +201,17 @@ function chunkArray(arr, size) {
   return out;
 }
 
-function buildUntukPembayaran(ps, pjd) {
+function buildUntukPembayaran(ps, pjd, includeTransport = false) {
   const tingkat = getTingkatBiaya(pjd.jenis_perjalanan);
-  const tujuan  = buildTujuanText(pjd);
-  let text = ps.dapat_transport
-    ? `Biaya Uang Harian dan Transport Perjalanan Dinas ${tingkat} ke ${tujuan}`
-    : `Biaya Uang Harian Perjalanan Dinas ${tingkat} ke ${tujuan}`;
-  const maksud = (pjd.maksud_perjalanan || '').trim();
-  if (maksud) {
-    text += /^dalam\s+rangka/i.test(maksud) ? ' ' + maksud : ' dalam rangka ' + maksud;
-  }
-  return text;
+  const kecamatan = pjd.jenis_perjalanan === 'dalam_kota'
+    ? getKecById(pjd.kecamatan_id)
+    : null;
+  const tujuan = kecamatan
+    ? `Kecamatan ${kecamatan.nama}`
+    : buildTujuanText(pjd);
+  const komponen = includeTransport && calcPesertaFull(ps, pjd).totalT > 0
+    ? 'Uang Harian dan Transport' : 'Uang Harian';
+  return `Biaya ${komponen} Perjalanan Dinas ${tingkat} ke ${tujuan}`;
 }
 
 function emptyKwitansiSlotFields(slot) {
@@ -221,11 +228,13 @@ function emptyKwitansiSlotFields(slot) {
   return out;
 }
 
-function buildKwitansiSlotFields(ps, pjd, urutanGlobal, slot) {
+function buildKwitansiSlotFields(ps, pjd, urutanGlobal, slot, includeTransport = false) {
   if (!ps) return emptyKwitansiSlotFields(slot);
 
   const pgw = getPegawaiById(ps.pegawai_id);
   const cp  = calcPesertaFull(ps, pjd);
+  const totalKwitansi = cp.totalH + (includeTransport ? cp.totalT : 0);
+  const transport = includeTransport && cp.totalT > 0 ? formatRupiah(cp.totalT) : '';
   const pg  = pgw?.pangkat_golongan || [pgw?.pangkat, pgw?.golongan].filter(Boolean).join(' / ') || '';
 
   return {
@@ -241,23 +250,23 @@ function buildKwitansiSlotFields(ps, pjd, urutanGlobal, slot) {
     [`rekening_${slot}`]              : pgw?.nomor_rekening || '',
     [`uang_harian_${slot}`]           : formatRupiah(cp.harian),
     [`uang_harian_peserta_${slot}`]   : formatRupiah(cp.harian),
-    [`transport_${slot}`]             : formatRupiah(cp.totalT),
-    [`transport_peserta_${slot}`]     : formatRupiah(cp.totalT),
-    [`transport_total_${slot}`]       : formatRupiah(cp.totalT),
-    [`total_${slot}`]                 : formatRupiah(cp.total),
-    [`total_peserta_${slot}`]         : formatRupiah(cp.total),
-    [`total_terbilang_${slot}`]       : terbilang(cp.total),
-    [`total_peserta_terbilang_${slot}`]: terbilang(cp.total),
-    [`banyaknya_uang_${slot}`]        : terbilang(cp.total),
-    [`nominal_${slot}`]               : formatNominalDoc(cp.total),
-    [`nominal_peserta_${slot}`]       : formatNominalDoc(cp.total),
-    [`untuk_pembayaran_${slot}`]      : buildUntukPembayaran(ps, pjd),
+    [`transport_${slot}`]             : transport,
+    [`transport_peserta_${slot}`]     : transport,
+    [`transport_total_${slot}`]       : transport,
+    [`total_${slot}`]                 : formatRupiah(totalKwitansi),
+    [`total_peserta_${slot}`]         : formatRupiah(totalKwitansi),
+    [`total_terbilang_${slot}`]       : terbilang(totalKwitansi),
+    [`total_peserta_terbilang_${slot}`]: terbilang(totalKwitansi),
+    [`banyaknya_uang_${slot}`]        : terbilang(totalKwitansi),
+    [`nominal_${slot}`]               : formatNominalDoc(totalKwitansi),
+    [`nominal_peserta_${slot}`]       : formatNominalDoc(totalKwitansi),
+    [`untuk_pembayaran_${slot}`]      : buildUntukPembayaran(ps, pjd, includeTransport),
     [`urutan_peserta_${slot}`]        : urutanGlobal,
     [`ada_peserta_${slot}`]           : true,
   };
 }
 
-function buildKwitansiHalamanArgs(chunk, pjd, halamanKe, totalHalaman) {
+function buildKwitansiHalamanArgs(chunk, pjd, halamanKe, totalHalaman, includeTransport = false) {
   const base = buildBaseArgs(pjd);
   const sorted = sortedPeserta(pjd);
   const globalOffset = (halamanKe - 1) * KWITANSI_PER_HALAMAN;
@@ -266,7 +275,7 @@ function buildKwitansiHalamanArgs(chunk, pjd, halamanKe, totalHalaman) {
   for (let s = 0; s < KWITANSI_PER_HALAMAN; s++) {
     const ps = chunk[s] || null;
     const urutan = ps ? sorted.indexOf(ps) + 1 : 0;
-    Object.assign(slotArgs, buildKwitansiSlotFields(ps, pjd, urutan, s + 1));
+    Object.assign(slotArgs, buildKwitansiSlotFields(ps, pjd, urutan, s + 1, includeTransport));
   }
 
   return {
@@ -288,12 +297,14 @@ function countKwitansiFiles(pjd, tmpl) {
   return n;
 }
 
-function buildPesertaArgs(ps, pjd, urutan) {
+function buildPesertaArgs(ps, pjd, urutan, includeTransport = false) {
   const pgw  = getPegawaiById(ps.pegawai_id);
   const uk   = getUKForPegawai(pgw);
   const cp   = calcPesertaFull(ps, pjd);
+  const totalKwitansi = cp.totalH + (includeTransport ? cp.totalT : 0);
+  const transport = includeTransport && cp.totalT > 0 ? formatRupiah(cp.totalT) : '';
 
-  const untukPembayaran = buildUntukPembayaran(ps, pjd);
+  const untukPembayaran = buildUntukPembayaran(ps, pjd, includeTransport);
 
   return {
     ...buildBaseArgs(pjd),
@@ -315,20 +326,21 @@ function buildPesertaArgs(ps, pjd, urutan) {
     // Kalkulasi
     uang_harian          : formatRupiah(cp.harian),
     uang_harian_peserta  : formatRupiah(cp.harian),
-    transport            : formatRupiah(cp.totalT),
-    transport_peserta    : formatRupiah(cp.totalT),
-    total                : formatRupiah(cp.total),
-    total_peserta        : formatRupiah(cp.total),
-    total_terbilang      : terbilang(cp.total),
-    total_peserta_terbilang: terbilang(cp.total),
-    banyaknya_uang       : terbilang(cp.total),
-    nominal              : formatNominalDoc(cp.total),
-    nominal_peserta      : formatNominalDoc(cp.total),
+    transport            : transport,
+    transport_peserta    : transport,
+    transport_total      : transport,
+    total                : formatRupiah(totalKwitansi),
+    total_peserta        : formatRupiah(totalKwitansi),
+    total_terbilang      : terbilang(totalKwitansi),
+    total_peserta_terbilang: terbilang(totalKwitansi),
+    banyaknya_uang       : terbilang(totalKwitansi),
+    nominal              : formatNominalDoc(totalKwitansi),
+    nominal_peserta      : formatNominalDoc(totalKwitansi),
     untuk_pembayaran     : untukPembayaran,
     urutan_peserta       : urutan,
-    // Transport detail
-    transport_nominal    : ps.dapat_transport ? formatRupiah(parseInt(ps.nominal_transport)||0) : '',
-    transport_kali       : ps.dapat_transport ? (parseInt(ps.jumlah_kali)||1) : '',
+    // Detail transport mengikuti pilihan saat generate kwitansi.
+    transport_nominal    : transport ? formatRupiah(parseInt(ps.nominal_transport) || 0) : '',
+    transport_kali       : transport ? (parseInt(ps.jumlah_kali) || 1) + ' Kali' : '',
     lama_hari            : cp.lama,
   };
 }
@@ -397,6 +409,59 @@ async function trimKwitansiHalaman(blob, jumlahPeserta) {
 }
 
 // ─── MAIN GENERATE ORCHESTRATOR ───────────────────────────
+let GENERATED_DOWNLOADS = null;
+
+function downloadGeneratedBlob(blob, fileName) {
+  if (!blob) return toast('File hasil generate tidak tersedia', 'error');
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+}
+
+function downloadGeneratedDocx(index) {
+  const file = GENERATED_DOWNLOADS?.files?.[index];
+  if (!file) return toast('File DOCX tidak ditemukan', 'error');
+  downloadGeneratedBlob(file.blob, file.name);
+}
+
+function downloadGeneratedZip() {
+  if (!GENERATED_DOWNLOADS?.zipBlob) return toast('File ZIP tidak ditemukan', 'error');
+  downloadGeneratedBlob(GENERATED_DOWNLOADS.zipBlob, GENERATED_DOWNLOADS.zipName);
+}
+
+function showGeneratedDownloads(files, zipBlob, zipName, errors = []) {
+  GENERATED_DOWNLOADS = { files, zipBlob, zipName };
+  document.getElementById('modal-generate-result')?.remove();
+
+  const rows = files.map((file, index) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:22px">📄</div>
+      <div style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow-wrap:anywhere">${file.name}</div>
+      <button class="btn btn-secondary btn-sm" onclick="downloadGeneratedDocx(${index})">⬇️ DOCX</button>
+    </div>`).join('');
+  const errorInfo = errors.length
+    ? `<div class="alert alert-warning" style="margin-bottom:14px">⚠️ ${errors.length} dokumen gagal dibuat. Detail kesalahan ditampilkan melalui notifikasi.</div>`
+    : '';
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = modalHTML(
+    'modal-generate-result',
+    'Dokumen Berhasil Dibuat',
+    `${errorInfo}
+     <div style="margin-bottom:8px;color:var(--text-2);font-size:13px">${files.length} file siap diunduh. Pilih file DOCX atau unduh semuanya dalam satu arsip.</div>
+     <div>${rows}</div>`,
+    `<button class="btn btn-secondary" onclick="closeModal('modal-generate-result')">Tutup</button>
+     <button class="btn btn-primary" onclick="downloadGeneratedZip()">📦 Download Semua (ZIP)</button>`,
+    true
+  );
+  document.body.appendChild(wrapper.firstElementChild);
+  openModal('modal-generate-result');
+}
+
 async function runGenerate(pjdId, selections) {
   const pjd = getPJDList().find(x => x.id === pjdId);
   if (!pjd) return toast('Data perjalanan tidak ditemukan', 'error');
@@ -408,7 +473,14 @@ async function runGenerate(pjdId, selections) {
   const nomorSafe = (pjd.nomor_surat || 'SPPD').replace(/[^a-zA-Z0-9]/g, '_');
   const folder = zip.folder(nomorSafe);
   const errors = [];
+  const files  = [];
   let   count  = 0;
+
+  const addGeneratedFile = (name, blob) => {
+    folder.file(name, blob);
+    files.push({ name, blob });
+    count++;
+  };
 
   for (const sel of selections) {
     const tmpl = AppState.templates.find(t => t.id === sel.templateId);
@@ -433,36 +505,34 @@ async function runGenerate(pjdId, selections) {
         const sorted = sortedPeserta(pjd);
         const pages  = chunkArray(sorted, KWITANSI_PER_HALAMAN);
         for (let p = 0; p < pages.length; p++) {
-          const args = buildKwitansiHalamanArgs(pages[p], pjd, p + 1, pages.length);
+          const args = buildKwitansiHalamanArgs(pages[p], pjd, p + 1, pages.length, sel.includeTransport === true);
           const blob = await generateDocx(tmplB64, args, {
             kwitansiJumlahPeserta: pages[p].length,
           });
-          folder.file(`Kwitansi_Halaman${p + 1}.docx`, blob);
-          count++;
+          addGeneratedFile(`Kwitansi_Halaman${p + 1}.docx`, blob);
         }
-      } else if (tmpl.isIterable) {
+      } else if (tmpl.jenis === 'kwitansi' || tmpl.isIterable) {
         const sorted = sortedPeserta(pjd);
         for (let i = 0; i < sorted.length; i++) {
           const pgw  = getPegawaiById(sorted[i].pegawai_id);
-          const nama = (pgw?.nama_lengkap || 'Peserta').split(',')[0].trim().replace(/\s+/g,'_');
-          const args = buildPesertaArgs(sorted[i], pjd, i + 1);
+          const nama = (pgw?.nama_lengkap || 'Peserta').split(',')[0].trim()
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zA-Z0-9_-]/g, '_');
+          const args = buildPesertaArgs(sorted[i], pjd, i + 1, tmpl.jenis === 'kwitansi' && sel.includeTransport === true);
           const blob = await generateDocx(tmplB64, args);
-          folder.file(`Kwitansi_${i+1}_${nama}.docx`, blob);
-          count++;
+          addGeneratedFile(`Kwitansi_${i+1}_${nama}.docx`, blob);
         }
       } else if (tmpl.jenis === 'sppd') {
         for (const lembar of [1, 2]) {
           const args = { ...buildBaseArgs(pjd), lembar_ke: lembar };
           const blob = await generateDocx(tmplB64, args);
-          folder.file(`SPPD_Lembar${lembar}.docx`, blob);
-          count++;
+          addGeneratedFile(`SPPD_Lembar${lembar}.docx`, blob);
         }
       } else {
         const args = buildBaseArgs(pjd);
         const blob = await generateDocx(tmplB64, args);
         const jenisSafe = (tmpl.jenis || 'Dokumen').replace(/[^a-zA-Z0-9]/g,'_');
-        folder.file(`${jenisSafe}.docx`, blob);
-        count++;
+        addGeneratedFile(`${jenisSafe}.docx`, blob);
       }
     } catch (err) {
       console.error(err);
@@ -470,28 +540,34 @@ async function runGenerate(pjdId, selections) {
     }
   }
 
-  updateGenerateProgress('Membuat file ZIP...');
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  const tgl     = formatTanggal(pjd.tanggal_berangkat).replace(/\s/g, '');
-  const dlName  = `${nomorSafe}_${tgl}.zip`;
-  const url     = URL.createObjectURL(zipBlob);
-  const a       = document.createElement('a');
-  a.href = url; a.download = dlName; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 8000);
+  let zipBlob = null;
+  let dlName  = '';
+  if (count > 0) {
+    updateGenerateProgress('Menyiapkan pilihan download...');
+    zipBlob = await zip.generateAsync({ type: 'blob' });
+    const tgl = formatTanggal(pjd.tanggal_berangkat).replace(/\s/g, '');
+    dlName = `${nomorSafe}_${tgl}.zip`;
+  }
 
   // Catat di history
   const gen = DB.getArr(KEYS.generated);
-  gen.unshift({ id: Date.now(), pjd_id: pjdId, nomor: pjd.nomor_surat, count, errors: errors.length, at: new Date().toISOString() });
+  const kwitansi = selections.find(s => s.jenis === 'kwitansi');
+  gen.unshift({ kwitansiMode: kwitansi ? (kwitansi.includeTransport ? 'harian_transport' : 'harian') : null, id: Date.now(), pjd_id: pjdId, nomor: pjd.nomor_surat, count, errors: errors.length, at: new Date().toISOString() });
   DB.set(KEYS.generated, gen.slice(0, 50));
 
-  if (btn) { btn.disabled = false; btn.textContent = '⚡ Generate & Download ZIP'; }
+  if (btn) { btn.disabled = false; btn.textContent = '⚡ Generate Dokumen'; }
   updateGenerateProgress('');
 
   if (errors.length) {
     errors.forEach(e => toast('⚠️ ' + e, 'warning', 5000));
   }
-  toast(`✅ ${count} dokumen berhasil digenerate!`, 'success', 5000);
+  if (count > 0) {
+    toast(`✅ ${count} dokumen berhasil digenerate!`, 'success', 5000);
+  } else {
+    toast('Tidak ada dokumen yang berhasil digenerate', 'error', 5000);
+  }
   renderGeneratePage();
+  if (count > 0) showGeneratedDownloads(files, zipBlob, dlName, errors);
 }
 
 function updateGenerateProgress(msg) {
@@ -663,7 +739,7 @@ function renderGeneratePage() {
             <div id="gen-progress" class="text-sm" style="color:var(--navy);margin-top:4px"></div>
           </div>
           <button class="btn btn-primary btn-lg" id="btn-generate" onclick="triggerGenerate()">
-            ⚡ Generate & Download ZIP
+            ⚡ Generate Dokumen
           </button>
         </div>
       </div>
@@ -682,7 +758,7 @@ function renderGeneratePage() {
           ${genHistory.map(h => `
             <tr>
               <td><strong>${h.nomor||'—'}</strong></td>
-              <td><span class="badge badge-auto">${h.count} dokumen</span></td>
+              <td><span class="badge badge-auto">${h.count} dokumen</span>${h.kwitansiMode ? `<div class="text-muted text-sm">Kwitansi: ${h.kwitansiMode === 'harian_transport' ? 'uang harian + transport' : 'uang harian saja'}</div>` : ''}</td>
               <td>${h.errors > 0 ? `<span class="badge badge-manual">⚠️ ${h.errors} error</span>` : '<span class="badge badge-auto">✅ Berhasil</span>'}</td>
               <td class="text-muted text-sm">${new Date(h.at).toLocaleString('id-ID')}</td>
             </tr>`).join('')}
@@ -715,6 +791,14 @@ function renderTemplateSelector() {
         <div style="flex:1">
           <div style="font-weight:700;font-size:13px">${j.label}</div>
           <div class="text-muted text-sm">${j.note}</div>
+          ${j.key === 'kwitansi' ? `
+            <div id="gen-kwitansi-options" hidden style="margin-top:10px">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="gen-include-transport" onchange="updateGenSummary()">
+                Sertakan biaya transport dalam kwitansi
+              </label>
+              <div class="text-muted text-sm" style="margin-top:4px">Menggunakan biaya transport yang sudah tercatat pada masing-masing peserta.</div>
+            </div>` : ''}
         </div>
         <div style="width:260px;flex-shrink:0">
           <select class="form-control" id="gsel-${j.key}" style="font-size:12px" onchange="updateGenSummary()">
@@ -726,6 +810,14 @@ function renderTemplateSelector() {
 }
 
 function onGenCheck(jenis, checked) {
+  if (jenis === 'kwitansi') {
+    const options = document.getElementById('gen-kwitansi-options');
+    if (options) options.hidden = !checked;
+    if (!checked) {
+      const transport = document.getElementById('gen-include-transport');
+      if (transport) transport.checked = false;
+    }
+  }
   const item = document.getElementById('genitem-' + jenis);
   if (item) {
     item.style.borderColor = checked ? 'var(--navy)' : 'var(--border)';
@@ -747,7 +839,7 @@ function updateGenSummary() {
         const pjd   = getPJDList().find(x => x.id === pjdId);
         const tmpl  = AppState.templates.find(t => t.id === s.templateId);
         const n     = countKwitansiFiles(pjd, tmpl || {});
-        return `Kwitansi (${n} file)`;
+        return `Kwitansi (${n} file; ${s.includeTransport ? 'uang harian + transport' : 'uang harian saja'})`;
       }
       if (s.jenis === 'sppd') return 'SPPD (2 lembar)';
       return s.label + ' (1 file)';
@@ -773,6 +865,7 @@ function getGenSelections() {
       jenis: j,
       label: { sppd:'SPPD', kwitansi:'Kwitansi', surat_tugas:'Surat Tugas', rekap_belanja:'Rekap Belanja', custom:'Custom' }[j],
       templateId: document.getElementById('gsel-' + j)?.value,
+      ...(j === 'kwitansi' ? { includeTransport: document.getElementById('gen-include-transport')?.checked === true } : {}),
     }))
     .filter(s => s.templateId);
 }

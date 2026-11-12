@@ -1,3 +1,4 @@
+(() => {
 /**
  * perjalanan.js — Phase 3: Form Perjalanan Dinas
  * Multi-step wizard + kalkulasi realtime
@@ -169,7 +170,7 @@ function renderPerjalananList() {
       </div>
       <div class="table-toolbar-right">
         <div class="search-bar" style="width:240px">
-          <span>🔍</span>
+          <span>${ic('search', 15)}</span>
           <input type="text" placeholder="Cari nomor surat, tujuan, peserta, maksud..." id="pjd-search"
             oninput="onPJDSearch(this.value)" value="${PJD_LIST_UI.search}">
         </div>
@@ -179,24 +180,24 @@ function renderPerjalananList() {
           <option value="all" ${limit==='all'?'selected':''}>Tampilkan semua</option>
         </select>
         <button class="btn btn-primary" onclick="startNewPerjalanan()">
-          ✈️ Buat Perjalanan Dinas Baru
+          ${ic('plane', 15)} Buat Perjalanan Dinas Baru
         </button>
       </div>
     </div>
 
     ${allList.length === 0 ? `
       <div class="empty-state" style="padding:80px 24px">
-        <div class="empty-state-icon">✈️</div>
+        <div class="empty-state-icon">${ic('plane', 28)}</div>
         <div class="empty-state-title">Belum ada perjalanan dinas</div>
         <div class="empty-state-desc" style="margin-bottom:20px">Klik tombol di atas untuk membuat perjalanan dinas baru</div>
-        <button class="btn btn-primary" onclick="startNewPerjalanan()">✈️ Buat Sekarang</button>
+        <button class="btn btn-primary" onclick="startNewPerjalanan()">${ic('plane', 15)} Buat Sekarang</button>
       </div>`
     : filtered.length === 0 ? `
       <div class="empty-state" style="padding:80px 24px">
-        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-icon">${ic('search', 28)}</div>
         <div class="empty-state-title">Nggak ada hasil buat "${PJD_LIST_UI.search}"</div>
         <div class="empty-state-desc" style="margin-bottom:20px">Coba kata kunci lain, atau reset pencarian.</div>
-        <button class="btn btn-secondary" onclick="onPJDSearch('')">✕ Reset Pencarian</button>
+        <button class="btn btn-secondary" onclick="onPJDSearch('')">${ic('x', 15)} Reset Pencarian</button>
       </div>`
     : shown.map(p => renderPJDCard(p)).join('') + (
         limit !== 'all' && filtered.length > shown.length
@@ -211,7 +212,7 @@ function renderPerjalananList() {
 function renderPJDCard(p) {
   const pesertaList = (p.peserta || []).map(ps => {
     const pgw = getPegawaiById(ps.pegawai_id);
-    return pgw ? pgw.nama_lengkap.split(',')[0] : '?';
+    return pgw ? escapeHtml(pgw.nama_lengkap.split(',')[0]) : '?';
   }).join(', ');
 
   const tujuan = p.jenis_perjalanan === 'dalam_kota'
@@ -225,21 +226,21 @@ function renderPJDCard(p) {
   }, 0);
 
   const statusClass = p.status === 'final' ? 'status-final' : 'status-draft';
-  const statusLabel = p.status === 'final' ? '✅ Final' : '📝 Draft';
+  const statusLabel = p.status === 'final' ? `${ic('check', 12)} Final` : `${ic('note', 12)} Draft`;
 
   return `
     <div class="pjd-card">
       <div class="pjd-card-header">
         <div style="flex:1">
           <div class="flex items-center gap-2" style="margin-bottom:4px">
-            <span style="font-size:15px;font-weight:800">${p.nomor_surat || '—'}</span>
+            <span style="font-size:15px;font-weight:800">${escapeHtml(p.nomor_surat || '—')}</span>
             <span class="badge ${statusClass}">${statusLabel}</span>
           </div>
           <div class="pjd-meta">
-            <span>📅 ${formatTanggal(p.tanggal_berangkat)}${p.tanggal_kembali !== p.tanggal_berangkat ? ' s.d ' + formatTanggal(p.tanggal_kembali) : ''}</span>
-            <span>📍 ${tujuan}</span>
-            <span>👥 ${p.peserta?.length || 0} peserta</span>
-            <span>🚗 ${p.alat_angkutan || '—'}</span>
+            <span>${ic('calendar', 15)} ${formatTanggal(p.tanggal_berangkat)}${p.tanggal_kembali !== p.tanggal_berangkat ? ' s.d ' + formatTanggal(p.tanggal_kembali) : ''}</span>
+            <span>${ic('mappin', 15)} ${escapeHtml(tujuan)}</span>
+            <span>${ic('users', 15)} ${p.peserta?.length || 0} peserta</span>
+            <span>${ic('car', 15)} ${escapeHtml(p.alat_angkutan || '—')}</span>
           </div>
         </div>
         <div style="text-align:right">
@@ -249,10 +250,10 @@ function renderPJDCard(p) {
       </div>
       <div class="pjd-card-body">
         <div class="flex justify-between items-center">
-          <span class="text-sm text-muted">👤 ${pesertaList || '—'}</span>
+          <span class="text-sm text-muted">${ic('user', 15)} ${pesertaList || '—'}</span>
           <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm" onclick="editPerjalanan('${p.id}')">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deletePerjalanan('${p.id}')">🗑️</button>
+            <button class="btn btn-secondary btn-sm" onclick="editPerjalanan('${p.id}')">${ic('edit', 15)} Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePerjalanan('${p.id}')">${ic('trash', 15)}</button>
           </div>
         </div>
       </div>
@@ -304,7 +305,7 @@ function renderWizard() {
     <div id="wizard-nav" class="flex justify-between items-center" style="margin-top:20px">
       <button class="btn btn-secondary" id="btn-prev" onclick="wizardPrev()">← Kembali</button>
       <div class="flex gap-2">
-        <button class="btn btn-secondary" onclick="renderPerjalananList()">✕ Batal</button>
+        <button class="btn btn-secondary" onclick="renderPerjalananList()">${ic('x', 15)} Batal</button>
         <button class="btn btn-primary" id="btn-next" onclick="wizardNext()">Lanjut →</button>
       </div>
     </div>`;
@@ -322,7 +323,7 @@ function wizardStepsHTML() {
     ${steps.map((s, i) => {
       const n = i + 1;
       const cls = n < PJD.currentStep ? 'done' : n === PJD.currentStep ? 'active' : 'pending';
-      const icon = n < PJD.currentStep ? '✓' : n;
+      const icon = n < PJD.currentStep ? ic('check', 13) : n;
       return `<div class="wizard-step ${cls}">
         <div class="step-circle">${icon}</div>
         <div class="step-info">
@@ -346,7 +347,7 @@ function renderStep(n) {
   if (n === 4) syncPesertaTransportFromDOM();
 
   if (prev) prev.style.display = n === 1 ? 'none' : '';
-  if (next) next.textContent = n === PJD.totalSteps ? '💾 Simpan Perjalanan' : 'Lanjut →';
+  if (next) next.textContent = n === PJD.totalSteps ? 'Simpan Perjalanan': 'Lanjut →';
 
   const renders = { 1: renderStep1, 2: renderStep2, 3: renderStep3, 4: renderStep4 };
   if (renders[n]) renders[n](body);
@@ -364,14 +365,14 @@ function renderStep1(body) {
   body.innerHTML = `
     <div class="card">
       <div class="card-header">
-        <div class="card-icon" style="background:#EBF3FD">📋</div>
+        <div class="card-icon" style="background:#EBF3FD">${ic('clipboard', 20)}</div>
         <div><h3>Data Perjalanan Dinas</h3><p>Nomor surat, tanggal, tujuan, dan angkutan</p></div>
       </div>
       <div class="card-body">
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Nomor Surat *</label>
-            <input class="form-control" id="f-nomor" value="${f.nomor_surat||''}"
+            <input class="form-control" id="f-nomor" value="${escapeHtml(f.nomor_surat||'')}"
               placeholder="800.1.11.1/1338-Sekretariat"
               oninput="PJD.form.nomor_surat=this.value">
           </div>
@@ -407,7 +408,7 @@ function renderStep1(body) {
         </div>
 
         <div id="lama-preview" style="display:none" class="alert alert-success" style="margin-bottom:14px">
-          📅 <span id="lama-text"></span>
+          ${ic('calendar', 15)} <span id="lama-text"></span>
         </div>
 
         <div class="form-row">
@@ -428,9 +429,9 @@ function renderStep1(body) {
           <div class="form-group">
             <label class="form-label">Jenis Perjalanan *</label>
             <select class="form-control" id="f-jenis" onchange="PJD.form.jenis_perjalanan=this.value;updateTarifPreview();updateTujuanField()">
-              <option value="dalam_kota"    ${f.jenis_perjalanan==='dalam_kota'    ?'selected':''}>🏙️ Dalam Kota / Dalam Daerah</option>
-              <option value="luar_kota"     ${f.jenis_perjalanan==='luar_kota'     ?'selected':''}>🚗 Luar Kota / Luar Daerah</option>
-              <option value="luar_provinsi" ${f.jenis_perjalanan==='luar_provinsi' ?'selected':''}>✈️ Luar Provinsi</option>
+              <option value="dalam_kota" ${f.jenis_perjalanan==='dalam_kota' ?'selected':''}> Dalam Kota / Dalam Daerah</option>
+              <option value="luar_kota" ${f.jenis_perjalanan==='luar_kota' ?'selected':''}> Luar Kota / Luar Daerah</option>
+              <option value="luar_provinsi" ${f.jenis_perjalanan==='luar_provinsi' ?'selected':''}> Luar Provinsi</option>
             </select>
           </div>
           <div class="form-group">
@@ -449,17 +450,17 @@ function renderStep1(body) {
             ${f.jenis_perjalanan === 'dalam_kota' || !f.jenis_perjalanan
               ? `<select class="form-control" id="f-kecamatan" onchange="PJD.form.kecamatan_id=this.value">
                   <option value="">— Pilih Kecamatan —</option>
-                  ${kecs.map(k => `<option value="${k.id}" ${f.kecamatan_id===k.id?'selected':''}>${k.nama} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
+                  ${kecs.map(k => `<option value="${k.id}" ${f.kecamatan_id===k.id?'selected':''}>${escapeHtml(k.nama)} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
                 </select>
-                <input class="form-control" id="f-nama-tempat" style="margin-top:8px" value="${f.nama_tempat||''}"
+                <input class="form-control" id="f-nama-tempat" style="margin-top:8px" value="${escapeHtml(f.nama_tempat||'')}"
                   placeholder="Nama tempat (opsional): Kantor Kecamatan Kemang"
                   oninput="PJD.form.nama_tempat=this.value">
                 <div class="form-text">Isi jika ingin nama tempat spesifik muncul di dokumen, bukan cuma nama kecamatan.</div>`
               : `<select class="form-control" id="f-kota-tujuan" style="margin-bottom:8px" onchange="onKotaTujuanChange(this.value)">
                   <option value="">— Pilih Kota Besar (opsional, isi saran tarif transport) —</option>
-                  ${kotas.map(k => `<option value="${k.id}" ${f.kota_tujuan_id===k.id?'selected':''}>${k.nama} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
+                  ${kotas.map(k => `<option value="${k.id}" ${f.kota_tujuan_id===k.id?'selected':''}>${escapeHtml(k.nama)} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
                 </select>
-                <input class="form-control" id="f-alamat" value="${f.alamat_tujuan||''}"
+                <input class="form-control" id="f-alamat" value="${escapeHtml(f.alamat_tujuan||'')}"
                   placeholder="Alamat lengkap tujuan perjalanan..."
                   oninput="PJD.form.alamat_tujuan=this.value">`}
           </div>
@@ -480,7 +481,7 @@ function renderStep1(body) {
             <label class="form-label">Kode Rekening SIPD</label>
             <select class="form-control" id="f-sipd" onchange="PJD.form.kode_sipd_id=this.value;Anggaran.refreshSelectionHint()">
               <option value="">— Pilih atau isi manual —</option>
-              ${sipds.map(s => `<option value="${s.id}" ${f.kode_sipd_id===s.id?'selected':''}>${s.nama_singkat||s.sub_kegiatan} (${s.kode})</option>`).join('')}
+              ${sipds.map(s => `<option value="${s.id}" ${f.kode_sipd_id===s.id?'selected':''}>${escapeHtml(s.nama_singkat||s.sub_kegiatan)} (${escapeHtml(s.kode)})</option>`).join('')}
             </select>
             <input class="form-control" id="f-sipd-manual" style="margin-top:8px"
               value="${f.kode_sipd_manual||''}" placeholder="Atau ketik kode manual: 5.1.02.04.001.00003"
@@ -549,9 +550,9 @@ function updateTujuanField() {
     if (label) label.textContent = 'Kecamatan Tujuan *';
     field.innerHTML = `<select class="form-control" id="f-kecamatan" onchange="PJD.form.kecamatan_id=this.value">
       <option value="">— Pilih Kecamatan —</option>
-      ${kecs.map(k => `<option value="${k.id}" ${PJD.form.kecamatan_id===k.id?'selected':''}>${k.nama} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
+      ${kecs.map(k => `<option value="${k.id}" ${PJD.form.kecamatan_id===k.id?'selected':''}>${escapeHtml(k.nama)} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
     </select>
-    <input class="form-control" id="f-nama-tempat" style="margin-top:8px" value="${PJD.form.nama_tempat||''}"
+    <input class="form-control" id="f-nama-tempat" style="margin-top:8px" value="${escapeHtml(PJD.form.nama_tempat||'')}"
       placeholder="Nama tempat (opsional): Kantor Kecamatan Kemang"
       oninput="PJD.form.nama_tempat=this.value">
     <div class="form-text">Isi jika ingin nama tempat spesifik muncul di dokumen, bukan cuma nama kecamatan.</div>`;
@@ -561,9 +562,9 @@ function updateTujuanField() {
     if (label) label.textContent = 'Alamat Tujuan *';
     field.innerHTML = `<select class="form-control" id="f-kota-tujuan" style="margin-bottom:8px" onchange="onKotaTujuanChange(this.value)">
       <option value="">— Pilih Kota Besar (opsional, isi saran tarif transport) —</option>
-      ${kotas.map(k => `<option value="${k.id}" ${PJD.form.kota_tujuan_id===k.id?'selected':''}>${k.nama} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
+      ${kotas.map(k => `<option value="${k.id}" ${PJD.form.kota_tujuan_id===k.id?'selected':''}>${escapeHtml(k.nama)} ${k.tarif_transport>0?'('+formatRupiah(k.tarif_transport)+')':''}</option>`).join('')}
     </select>
-    <input class="form-control" id="f-alamat" value="${PJD.form.alamat_tujuan||''}"
+    <input class="form-control" id="f-alamat" value="${escapeHtml(PJD.form.alamat_tujuan||'')}"
       placeholder="Jl. Medan Merdeka Barat No.17, Jakarta..." oninput="PJD.form.alamat_tujuan=this.value">`;
     PJD.form.kecamatan_id = '';
   }
@@ -592,10 +593,10 @@ function renderStep2(body) {
   if (allPegawai.length === 0) {
     body.innerHTML = `
       <div class="empty-state" style="padding:60px 24px">
-        <div class="empty-state-icon">👤</div>
+        <div class="empty-state-icon">${ic('user', 28)}</div>
         <div class="empty-state-title">Belum ada data pegawai</div>
         <div class="empty-state-desc" style="margin-bottom:16px">Tambahkan pegawai di Data Master terlebih dahulu</div>
-        <button class="btn btn-primary" onclick="navigateTo('master')">🗄️ Ke Data Master</button>
+        <button class="btn btn-primary" onclick="navigateTo('master')">${ic('archive', 15)} Ke Data Master</button>
       </div>`;
     return;
   }
@@ -605,7 +606,7 @@ function renderStep2(body) {
       <div>
         <div class="card">
           <div class="card-header">
-            <div class="card-icon" style="background:#E8F5E9">👥</div>
+            <div class="card-icon" style="background:#E8F5E9">${ic('users', 20)}</div>
             <div><h3>Pilih Peserta</h3><p>Centang pegawai yang ikut perjalanan dinas</p></div>
           </div>
           <div class="card-body" style="padding:14px">
@@ -615,11 +616,11 @@ function renderStep2(body) {
       </div>
       <div>
         <div class="calc-panel" id="calc-panel">
-          <div class="calc-panel-title">💰 Kalkulasi Realtime</div>
+          <div class="calc-panel-title">${ic('coins', 15)} Kalkulasi Realtime</div>
           <div id="calc-content"><div style="opacity:.5;font-size:13px">Pilih peserta untuk melihat kalkulasi</div></div>
         </div>
         <div class="alert alert-info">
-          💡 <strong>Transport:</strong> Nominal per kali × Jumlah Kali (tidak dikalikan jumlah hari)<br>
+          ${ic('bulb', 15)} <strong>Transport:</strong> Nominal per kali × Jumlah Kali (tidak dikalikan jumlah hari)<br>
           ${(PJD.form.jenis_perjalanan || 'dalam_kota') === 'dalam_kota'
             ? 'Hanya <strong>satu peserta</strong> yang dapat biaya transport (dalam kota).'
             : 'Untuk luar daerah/provinsi, <strong>setiap peserta</strong> boleh diisi transport masing-masing.'}
@@ -644,8 +645,8 @@ function renderPesertaItem(pgw) {
         <input type="checkbox" class="peserta-check" id="pchk-${pgw.id}"
           ${isSelected ? 'checked' : ''} onclick="event.stopPropagation();togglePeserta('${pgw.id}')">
         <div class="peserta-info">
-          <div class="peserta-name">${pgw.nama_lengkap}</div>
-          <div class="peserta-meta">${pgw.pangkat||''} ${pgw.golongan ? '/ '+pgw.golongan : ''} · ${pgw.jabatan||'—'}</div>
+          <div class="peserta-name">${escapeHtml(pgw.nama_lengkap)}</div>
+          <div class="peserta-meta">${escapeHtml(pgw.pangkat||'')} ${pgw.golongan ? '/ '+escapeHtml(pgw.golongan) : ''} · ${escapeHtml(pgw.jabatan||'—')}</div>
         </div>
         <div class="peserta-total" id="ptotal-${pgw.id}">
           ${isSelected ? formatRupiah(calcPeserta(existing).total) : ''}
@@ -659,7 +660,7 @@ function renderPesertaItem(pgw) {
             onchange="toggleTransport('${pgw.id}', this.checked)"
             style="width:16px;height:16px;cursor:pointer;accent-color:var(--success)">
           <label for="ptrans-chk-${pgw.id}" style="cursor:pointer;font-weight:600">
-            🚗 Dapat biaya transport?
+            ${ic('car', 15)} Dapat biaya transport?
           </label>
           ${suggestTransport > 0 ? `<span class="badge badge-auto" style="margin-left:auto">Saran: ${formatRupiah(suggestTransport)}</span>` : ''}
         </div>
@@ -848,7 +849,7 @@ function updateCalcPanel() {
     grand += cp.total;
     const nama = pgw ? pgw.nama_lengkap.split(',')[0] : '?';
     rows += `<div class="calc-row">
-      <span>${nama} ${p.dapat_transport ? '🚗' : ''}</span>
+      <span>${escapeHtml(nama)} ${p.dapat_transport ? `${ic('car', 15)}` : ''}</span>
       <span>${formatRupiah(cp.total)}</span>
     </div>`;
   });
@@ -874,7 +875,7 @@ function renderStep3(body) {
       <div>
         <div class="card mb-4">
           <div class="card-header">
-            <div class="card-icon" style="background:#EBF3FD">📋</div>
+            <div class="card-icon" style="background:#EBF3FD">${ic('clipboard', 20)}</div>
             <div><h3>Untuk SPPD</h3><p>Item 4 pada dokumen SPPD</p></div>
           </div>
           <div class="card-body">
@@ -888,7 +889,7 @@ function renderStep3(body) {
               <label class="form-label">PPTK <span class="text-muted">(Penandatangan Pergerakan SPPD)</span></label>
               <select class="form-control" id="f-pptk" onchange="PJD.form.pptk_id=this.value">
                 <option value="">— Pilih PPTK —</option>
-                ${pegawai.map(p => `<option value="${p.id}" ${f.pptk_id===p.id?'selected':''}>${p.nama_lengkap} (${p.golongan||'—'})</option>`).join('')}
+                ${pegawai.map(p => `<option value="${p.id}" ${f.pptk_id===p.id?'selected':''}>${escapeHtml(p.nama_lengkap)} (${escapeHtml(p.golongan||'—')})</option>`).join('')}
               </select>
             </div>
           </div>
@@ -898,15 +899,16 @@ function renderStep3(body) {
       <div>
         <div class="card">
           <div class="card-header">
-            <div class="card-icon" style="background:#FFF3E0">📝</div>
+            <div class="card-icon" style="background:#FFF3E0">${ic('note', 20)}</div>
             <div><h3>Untuk Surat Tugas</h3><p>Bagian dasar dan isi perintah</p></div>
           </div>
           <div class="card-body">
             <div class="form-group">
               <label class="form-label">Dasar Penugasan</label>
               <textarea class="form-control" id="f-dasar" rows="3"
-                placeholder="Dalam rangka pelaksanaan program kerja Dinas Kebudayaan dan Pariwisata Kabupaten Bogor..."
-                oninput="PJD.form.dasar=this.value">${f.dasar||''}</textarea>
+                placeholder="Satu dasar per baris, nomor otomatis. Contoh:&#10;Peraturan Bupati Bogor Nomor ...&#10;Surat Dinas Kesehatan Nomor ..."
+                oninput="PJD.form.dasar=this.value">${escapeHtml(f.dasar||'')}</textarea>
+              <div class="form-text">Satu dasar per baris — nomor urut terisi otomatis di dokumen.</div>
             </div>
             <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Deskripsi Tugas / Untuk</label>
@@ -956,7 +958,7 @@ function renderStep4(body) {
     pesertaRows += `
       <tr>
         <td>${i+1}</td>
-        <td><strong>${pgw?.nama_lengkap||'?'}</strong><br><span class="text-muted text-sm">${pgw?.pangkat||''} ${pgw?.golongan?'/ '+pgw.golongan:''}</span></td>
+        <td><strong>${escapeHtml(pgw?.nama_lengkap || '?')}</strong><br><span class="text-muted text-sm">${escapeHtml(pgw?.pangkat||'')} ${pgw?.golongan?'/ '+escapeHtml(pgw.golongan):''}</span></td>
         <td>${formatRupiah(cp.uang_harian)} × ${lama} hari<br><strong>${formatRupiah(cp.total_uang_harian)}</strong></td>
         <td>${p.dapat_transport
           ? `${formatRupiah(nom)} × ${kali} kali<br><strong>${formatRupiah(cp.total_transport)}</strong>`
@@ -968,7 +970,7 @@ function renderStep4(body) {
 
   body.innerHTML = `
     <div class="ringkasan-section">
-      <div class="ringkasan-section-title">📋 Data Perjalanan</div>
+      <div class="ringkasan-section-title">${ic('clipboard', 15)} Data Perjalanan</div>
       <div class="ringkasan-row"><div class="ringkasan-label">Nomor Surat</div><div class="ringkasan-value">${f.nomor_surat||'—'}</div></div>
       <div class="ringkasan-row"><div class="ringkasan-label">Tanggal Surat</div><div class="ringkasan-value">${f.tanggal_surat ? formatTanggal(f.tanggal_surat) : '—'}</div></div>
       <div class="ringkasan-row"><div class="ringkasan-label">Tanggal Berangkat</div><div class="ringkasan-value">${f.tanggal_berangkat ? formatTanggal(f.tanggal_berangkat)+' ('+namaHari(f.tanggal_berangkat)+')' : '—'}</div></div>
@@ -981,15 +983,15 @@ function renderStep4(body) {
     </div>
 
     <div class="ringkasan-section">
-      <div class="ringkasan-section-title">📝 Isian Dokumen</div>
-      <div class="ringkasan-row"><div class="ringkasan-label">Maksud Perjalanan</div><div class="ringkasan-value">${f.maksud_perjalanan||'—'}</div></div>
-      <div class="ringkasan-row"><div class="ringkasan-label">PPTK</div><div class="ringkasan-value">${pptk ? pptk.nama_lengkap : '—'}</div></div>
-      <div class="ringkasan-row"><div class="ringkasan-label">Dasar Penugasan</div><div class="ringkasan-value">${f.dasar ? f.dasar.substring(0,100)+'...' : '—'}</div></div>
-      <div class="ringkasan-row"><div class="ringkasan-label">Deskripsi Tugas</div><div class="ringkasan-value">${f.deskripsi_tugas ? f.deskripsi_tugas.substring(0,100)+'...' : '—'}</div></div>
+      <div class="ringkasan-section-title">${ic('note', 15)} Isian Dokumen</div>
+      <div class="ringkasan-row"><div class="ringkasan-label">Maksud Perjalanan</div><div class="ringkasan-value">${escapeHtml(f.maksud_perjalanan||'—')}</div></div>
+      <div class="ringkasan-row"><div class="ringkasan-label">PPTK</div><div class="ringkasan-value">${pptk ? escapeHtml(pptk.nama_lengkap) : '—'}</div></div>
+      <div class="ringkasan-row"><div class="ringkasan-label">Dasar Penugasan</div><div class="ringkasan-value">${f.dasar ? escapeHtml(f.dasar.substring(0,100))+'...' : '—'}</div></div>
+      <div class="ringkasan-row"><div class="ringkasan-label">Deskripsi Tugas</div><div class="ringkasan-value">${f.deskripsi_tugas ? escapeHtml(f.deskripsi_tugas.substring(0,100))+'...' : '—'}</div></div>
     </div>
 
     <div class="ringkasan-section">
-      <div class="ringkasan-section-title">💰 Kalkulasi Biaya</div>
+      <div class="ringkasan-section-title">${ic('coins', 15)} Kalkulasi Biaya</div>
       <div class="card-body" style="padding:0">
         <div class="table-wrap"><table>
           <thead><tr>
@@ -1132,3 +1134,7 @@ function savePerjalanan() {
   PJD.reset();
   renderPerjalananList();
 }
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { PJD, deletePerjalanan, editPerjalanan, updateLamaPreview, updateTarifPreview, updateTujuanField, getKecById, getPJDList, getPegawaiById, getSipdById, getTingkatBiaya, onKotaTujuanChange, onPJDLimitChange, onPJDSearch, renderPerjalananList, resetUangHarian, savePJDList, startNewPerjalanan, togglePeserta, toggleTransport, updatePesertaTransport, wizardNext, wizardPrev });
+})();

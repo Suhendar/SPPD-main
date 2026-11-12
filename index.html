@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SPPD App</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/surat-tugas-ai.css">
   <link rel="stylesheet" href="upgrade/css/anggaran.css">
@@ -17,7 +18,7 @@
 </div>
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon">🏛️</div>
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width=22 height=22><path d="M3 21l18 0" /> <path d="M3 10l18 0" /> <path d="M5 6l7 -3l7 3" /> <path d="M4 10l0 11" /> <path d="M20 10l0 11" /> <path d="M8 14l0 3" /> <path d="M12 14l0 3" /> <path d="M16 14l0 3" /></svg></div>
     <div class="logo-text">
       <strong>SPPD Generator</strong>
       <span>Dinas Kebudayaan Kab. Bogor</span>
@@ -25,28 +26,28 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Menu Utama</div>
-    <button class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span> Dashboard</button>
-    <button class="nav-item" data-page="perjalanan"><span class="nav-icon">✈️</span> Perjalanan Dinas</button>
+    <button class="nav-item active" data-page="dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /> <path d="M13.45 11.55l2.05 -2.05" /> <path d="M6.4 20a9 9 0 1 1 11.2 0l-11.2 0" /></svg></span> Dashboard</button>
+    <button class="nav-item" data-page="perjalanan"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4" /> <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /> <path d="M9 9l1 0" /> <path d="M9 13l6 0" /> <path d="M9 17l6 0" /></svg></span> Perjalanan Dinas</button>
     <div class="nav-section-label">Dokumen</div>
-    <button class="nav-item" data-page="template"><span class="nav-icon">📄</span> Kelola Template</button>
-    <button class="nav-item" data-page="generate"><span class="nav-icon">⚡</span> Generate Dokumen</button>
-    <button class="nav-item" data-page="surat-tugas-ai"><span class="nav-icon">🤖</span> Surat Tugas AI</button>
-    <button class="nav-item" data-page="rekap"><span class="nav-icon">📊</span> Rekap Rincian</button>
+    <button class="nav-item" data-page="template"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4" /> <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /> <path d="M9 17h6" /> <path d="M9 13h6" /></svg></span> Kelola Template</button>
+    <button class="nav-item" data-page="generate"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11" /></svg></span> Generate Dokumen</button>
+    <button class="nav-item" data-page="surat-tugas-ai"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 7v5l3 3" /></svg></span> Surat Tugas AI</button>
+    <button class="nav-item" data-page="rekap"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" /> <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" /> <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" /> <path d="M4 20h14" /></svg></span> Rekap Rincian</button>
     <div class="nav-section-label">Referensi</div>
-    <button class="nav-item" data-page="panduan"><span class="nav-icon">📖</span> Panduan Arguments</button>
-    <button class="nav-item" data-page="master"><span class="nav-icon">🗄️</span> Data Master</button>
-    <button class="nav-item" data-page="trash"><span class="nav-icon">🗑️</span> Trash <span id="trash-count" class="nav-badge" style="display:none">0</span></button>
+    <button class="nav-item" data-page="panduan"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /> <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /> <path d="M3 6l0 13" /> <path d="M12 6l0 13" /> <path d="M21 6l0 13" /></svg></span> Panduan Arguments</button>
+    <button class="nav-item" data-page="master"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /> <path d="M4 6v6a8 3 0 0 0 16 0v-6" /> <path d="M4 12v6a8 3 0 0 0 16 0v-6" /></svg></span> Data Master</button>
+    <button class="nav-item" data-page="trash"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l16 0" /> <path d="M10 11l0 6" /> <path d="M14 11l0 6" /> <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /> <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg></span> Trash <span id="trash-count" class="nav-badge" style="display:none">0</span></button>
   </nav>
   <div class="sidebar-footer">
     <div class="sidebar-user" id="sidebar-user">
-      <div class="sidebar-user-avatar" id="user-avatar">👤</div>
+      <div class="sidebar-user-avatar" id="user-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width=20 height=20><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /> <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg></div>
       <div class="sidebar-user-info">
         <strong id="user-name">—</strong>
         <span id="user-email">—</span>
       </div>
     </div>
     <button type="button" class="nav-item sidebar-logout" onclick="Auth.signOut()">
-      <span class="nav-icon">🚪</span> Keluar
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /> <path d="M9 12h12l-3 -3" /> <path d="M18 15l3 -3" /></svg></span> Keluar
     </button>
   </div>
 </aside>
@@ -58,23 +59,23 @@
     </div>
     <div class="topbar-actions">
       <span id="cloud-sync-badge" class="cloud-sync-badge" style="display:none" title="Status penyimpanan"></span>
-      <button class="btn btn-secondary btn-sm" onclick="navigateTo('panduan')">📖 Panduan</button>
-      <button class="btn btn-primary btn-sm" onclick="navigateTo('template')">📤 Upload Template</button>
+      <button class="btn btn-secondary btn-sm" onclick="navigateTo('panduan')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /> <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /> <path d="M3 6l0 13" /> <path d="M12 6l0 13" /> <path d="M21 6l0 13" /></svg> Panduan</button>
+      <button class="btn btn-primary btn-sm" onclick="navigateTo('template')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /> <path d="M7 9l5 -5l5 5" /> <path d="M12 4l0 12" /></svg> Upload Template</button>
     </div>
   </header>
   <div class="page-content" id="main-content"></div>
 </main>
 <div class="toast-container" id="toast-container"></div>
 <script src="js/config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <script src="js/auth.js"></script>
 <script src="js/db.js"></script>
 <script src="js/template-storage.js"></script>
 <script src="js/terbilang.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.1/dist/pizzip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.49.0/build/docxtemplater.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.1/dist/pizzip.min.js" integrity="sha384-V+f452hjBOqFJT/3xiFFoZTxUQYJWE6aDky9vf6ZrqrhkC85g+6rlomA2KJ8tdjR" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.49.0/build/docxtemplater.js" integrity="sha384-g1flOe2sqw9pLW8QmFTg2Ni74falWgCzvfR1bOaY2kP0fWrHDXDax+xK9uvjnY6Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" integrity="sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz" crossorigin="anonymous"></script>
 <script src="js/app.js"></script>
 <script src="js/master.js"></script>
 <script src="js/perjalanan.js"></script>

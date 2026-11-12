@@ -1,10 +1,15 @@
+(() => {
 /**
  * template-storage.js — File template .docx di Supabase Storage
- * Metadata template (tanpa file) tetap di sppd_user_store / localStorage.
+ * Metadata template + cadangan fileData tetap di sppd_user_store / localStorage.
  */
 
 const TemplateStorage = {
   BUCKET: 'sppd-templates',
+
+  BUNDLED_BY_JENIS: {
+    nota_dinas: 'templates/nota_dinas_template.docx',
+  },
 
   canUse() {
     return typeof DB !== 'undefined' && DB.usesCloud() && typeof Auth !== 'undefined' && Auth.client();
@@ -63,17 +68,72 @@ const TemplateStorage = {
     return template?.storagePath || template?.storage_path || template?.path || '';
   },
 
+  getBundledUrl(template) {
+    if (template?.jenis && this.BUNDLED_BY_JENIS[template.jenis]) {
+      return this.BUNDLED_BY_JENIS[template.jenis];
+    }
+    return '';
+  },
+
   hasFile(template) {
-    return !!(this.getStoragePath(template) || this.getFileData(template));
+    return !!(this.getStoragePath(template) || this.getFileData(template) || this.getBundledUrl(template));
+  },
+
+  async _fetchBundledBase64(template) {
+    if (typeof fetch !== 'function') return '';
+    const candidates = [];
+    if (template?.fileName) {
+      candidates.push(`templates/${encodeURIComponent(template.fileName)}`);
+    }
+    const byJenis = this.getBundledUrl(template);
+    if (byJenis) candidates.push(byJenis);
+
+    for (const url of [...new Set(candidates)]) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const buf = await res.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        // Validasi header ZIP/DOCX (PK\x03\x04)
+        if (bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4b) {
+          return this.arrayBufferToBase64(buf);
+        }
+      } catch {
+        // Coba kandidat berikutnya
+      }
+    }
+    return '';
+  },
+
+  _cacheFileData(template, b64) {
+    if (!template || !b64) return;
+    template.fileData = b64;
+    if (typeof DB !== 'undefined' && typeof KEYS !== 'undefined' && KEYS.templates) {
+      const list = DB.getArr(KEYS.templates);
+      const idx = list.findIndex((t) => t.id === template.id);
+      if (idx >= 0 && !list[idx].fileData) {
+        list[idx] = { ...list[idx], fileData: b64 };
+        DB.set(KEYS.templates, list);
+      }
+    }
   },
 
   /** Upload file; kembalikan storagePath */
   async upload(file, templateId) {
     const path = this.buildPath(templateId, file.name);
-    const { error } = await this._sb().storage.from(this.BUCKET).upload(path, file, {
+    let { error } = await this._sb().storage.from(this.BUCKET).upload(path, file, {
       upsert: true,
       contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     });
+    if (error && typeof Auth !== 'undefined' && typeof Auth.isJwtExpired === 'function' && Auth.isJwtExpired(error)) {
+      const refreshed = await Auth.refreshSession();
+      if (refreshed) {
+        ({ error } = await this._sb().storage.from(this.BUCKET).upload(path, file, {
+          upsert: true,
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        }));
+      }
+    }
     if (error) throw error;
     return path;
   },
@@ -83,15 +143,40 @@ const TemplateStorage = {
     if (fileData) return fileData;
 
     const storagePath = this.getStoragePath(template);
-    if (!storagePath) throw new Error('File template tidak ditemukan');
+    let storageErr = null;
 
-    const { data, error } = await this._sb().storage
-      .from(this.BUCKET)
-      .download(storagePath);
-    if (error) throw error;
+    if (storagePath && this.canUse()) {
+      let { data, error } = await this._sb().storage
+        .from(this.BUCKET)
+        .download(storagePath);
 
-    const buffer = await data.arrayBuffer();
-    return this.arrayBufferToBase64(buffer);
+      if (error && typeof Auth !== 'undefined' && typeof Auth.isJwtExpired === 'function' && Auth.isJwtExpired(error)) {
+        const refreshed = await Auth.refreshSession();
+        if (refreshed) {
+          ({ data, error } = await this._sb().storage
+            .from(this.BUCKET)
+            .download(storagePath));
+        }
+      }
+
+      if (!error && data) {
+        const buffer = await data.arrayBuffer();
+        const b64 = this.arrayBufferToBase64(buffer);
+        this._cacheFileData(template, b64);
+        return b64;
+      }
+      storageErr = error;
+    }
+
+    // Fallback ke file template bawaan repo bila bucket/storage belum tersedia
+    const bundled = await this._fetchBundledBase64(template);
+    if (bundled) {
+      this._cacheFileData(template, bundled);
+      return bundled;
+    }
+
+    if (storageErr) throw storageErr;
+    throw new Error('File template tidak ditemukan');
   },
 
   async remove(template) {
@@ -100,55 +185,22 @@ const TemplateStorage = {
     if (error) throw error;
   },
 
-  /** Metadata saja — tanpa fileData */
+  /** Pertahankan fileData sebagai cadangan agar tidak gagal jika bucket belum siap */
   metaFromRecord(rec, storagePath, fileSize) {
-    const { fileData, ...meta } = rec;
     return {
-      ...meta,
+      ...rec,
       storagePath,
-      fileSize: fileSize ?? meta.fileSize ?? null,
+      fileSize: fileSize ?? rec.fileSize ?? null,
     };
   },
 
-  /** Pindahkan template lama (base64 di DB) ke Storage */
+  /** Pastikan semua template siap dipakai tanpa menghapus cadangan fileData */
   async migrateTemplatesList(templates) {
-    if (!this.canUse() || !Array.isArray(templates)) return templates;
-
-    let changed = false;
-    const out = [];
-
-    for (const t of templates) {
-      if (!t.fileData || t.storagePath) {
-        if (t.fileData && t.storagePath) {
-          const { fileData, ...clean } = t;
-          out.push(clean);
-          changed = true;
-        } else {
-          out.push(t);
-        }
-        continue;
-      }
-
-      try {
-        const blob = this.base64ToBlob(t.fileData);
-        const file = new File([blob], t.fileName || 'template.docx', { type: blob.type });
-        const storagePath = await this.upload(file, t.id);
-        out.push(this.metaFromRecord(t, storagePath, blob.size));
-        changed = true;
-      } catch (err) {
-        console.error('[TemplateStorage] migrate failed', t.id, err);
-        out.push(t);
-      }
-    }
-
-    if (changed) {
-      DB.set(KEYS.templates, out);
-      if (typeof toast === 'function') {
-        const n = out.filter(x => x.storagePath).length;
-        toast(`${n} template file dipindah ke Supabase Storage`, 'success', 5000);
-      }
-    }
-
-    return out;
+    if (!Array.isArray(templates)) return templates;
+    return templates;
   },
 };
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { TemplateStorage });
+})();

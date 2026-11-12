@@ -4,6 +4,7 @@
   "private": true,
   "description": "SPPD Generator — Dinas Kebudayaan Kab. Bogor",
   "scripts": {
-    "build": "node scripts/generate-config.js"
+    "build": "node scripts/generate-config.js",
+    "test": "node --test tests/*.test.mjs"
   }
 }

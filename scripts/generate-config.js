@@ -8,6 +8,13 @@ const path = require('path');
 const url = process.env.SUPABASE_URL || '';
 const key = process.env.SUPABASE_ANON_KEY || '';
 
+// Fail-closed: jangan hasilkan build tanpa kredensial —
+// config kosong membuat aplikasi jalan tanpa login (mode dev).
+if (!url || !key) {
+  console.error('[build] FATAL: SUPABASE_URL dan SUPABASE_ANON_KEY wajib diset di environment.');
+  process.exit(1);
+}
+
 const content = `/**
  * Auto-generated — jangan edit manual. Gunakan Vercel env vars atau config.example.js.
  */

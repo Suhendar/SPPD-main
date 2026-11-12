@@ -1,29 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:wght@400;500;600&display=swap');
 
 :root {
-  --navy: #1B3A6B;
-  --navy-dark: #122848;
-  --navy-light: #2A5298;
-  --red: #C0392B;
-  --red-light: #E74C3C;
+  --navy: #0956C3;
+  --navy-dark: #073E8F;
+  --navy-light: #196BCD;
+  --red: #CD3537;
+  --red-light: #E15254;
   --gold: #D4A017;
-  --bg: #F0F3F9;
+  --bg: #F6F6F6;
   --surface: #FFFFFF;
-  --surface-2: #F7F9FC;
-  --border: #E1E8F0;
-  --text: #1A2332;
-  --text-2: #4A5568;
-  --text-3: #8496AA;
-  --success: #27AE60;
+  --surface-2: #FAFAFA;
+  --border: #E2E2E2;
+  /* IDDS product palette: biru #0956C3 (primary), netral abu. */
+  --text: #1B1B1B;
+  --text-2: #525252;
+  --text-3: #8A8A8A;
+  --success: #1B7A3D;
   --warning: #F39C12;
   --info: #2980B9;
   --sidebar-w: 260px;
   --header-h: 64px;
-  --radius: 10px;
-  --radius-lg: 16px;
-  --shadow: 0 2px 8px rgba(27,58,107,0.08);
-  --shadow-md: 0 4px 20px rgba(27,58,107,0.12);
-  --shadow-lg: 0 8px 40px rgba(27,58,107,0.16);
+  --radius: 8px;
+  --radius-lg: 14px;
+  --shadow: 0 2px 8px rgba(9,86,195,0.08);
+  --shadow-md: 0 4px 20px rgba(9,86,195,0.12);
+  --shadow-lg: 0 8px 40px rgba(9,86,195,0.16);
   --transition: 0.2s ease;
 }
 
@@ -180,6 +181,11 @@ body {
   text-align: center;
   flex-shrink: 0;
 }
+.nav-icon svg {
+  width: 17px;
+  height: 17px;
+  vertical-align: -3px;
+}
 
 .nav-badge {
   margin-left: auto;
@@ -273,7 +279,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 1px 4px rgba(27,58,107,0.06);
+  box-shadow: 0 1px 4px rgba(9,86,195,0.06);
 }
 
 .topbar-title {
@@ -366,7 +372,7 @@ body {
   background: var(--navy);
   color: white;
 }
-.btn-primary:hover { background: var(--navy-light); box-shadow: 0 4px 12px rgba(27,58,107,0.3); }
+.btn-primary:hover { background: var(--navy-light); box-shadow: 0 4px 12px rgba(9,86,195,0.3); }
 
 .btn-secondary {
   background: var(--surface-2);
@@ -409,7 +415,7 @@ body {
 }
 
 .badge-auto { background: #EBF8F2; color: #1E8449; }
-.badge-computed { background: #EBF3FD; color: #1A6BB0; }
+.badge-computed { background: #EAF2FE; color: #0956C3; }
 .badge-manual { background: #FEF9E7; color: #9A7D0A; }
 .badge-loop { background: #F5EEF8; color: #7D3C98; }
 .badge-static { background: #F2F3F4; color: #5D6D7E; }
@@ -656,7 +662,7 @@ tr:hover td { background: var(--surface-2); }
 
 .upload-zone:hover, .upload-zone.drag-over {
   border-color: var(--navy-light);
-  background: #EEF3FB;
+  background: #EAF2FE;
 }
 
 .upload-icon { font-size: 48px; margin-bottom: 12px; }
@@ -1006,7 +1012,7 @@ tr:hover td { background: var(--surface-2); }
   cursor: pointer;
 }
 .tarif-card:hover { border-color: var(--navy-light); }
-.tarif-card.active { border-color: var(--navy); background: #EEF3FB; }
+.tarif-card.active { border-color: var(--navy); background: #EAF2FE; }
 .tarif-icon { font-size: 28px; margin-bottom: 8px; }
 .tarif-label { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
 .tarif-value { font-size: 22px; font-weight: 800; color: var(--navy); }
@@ -1073,7 +1079,7 @@ tr:hover td { background: var(--surface-2); }
   transition: var(--transition);
 }
 .wizard-step.pending .step-circle { background: var(--bg); color: var(--text-3); border: 2px solid var(--border); }
-.wizard-step.active  .step-circle { background: var(--navy); color: white; box-shadow: 0 0 0 4px rgba(27,58,107,0.15); }
+.wizard-step.active  .step-circle { background: var(--navy); color: white; box-shadow: 0 0 0 4px rgba(9,86,195,0.15); }
 .wizard-step.done    .step-circle { background: var(--success); color: white; }
 
 .step-info { z-index: 1; }
@@ -1105,7 +1111,7 @@ tr:hover td { background: var(--surface-2); }
   transition: var(--transition);
   background: var(--surface);
 }
-.peserta-item.selected { border-color: var(--navy-light); background: #EEF3FB; }
+.peserta-item.selected { border-color: var(--navy-light); background: #EAF2FE; }
 .peserta-item.has-transport { border-color: var(--success); background: #EAF7EF; }
 
 .peserta-header { display: flex; align-items: center; gap: 12px; cursor: pointer; }

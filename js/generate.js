@@ -1,3 +1,4 @@
+(() => {
 /**
  * generate.js — Phase 4: Generate Engine & ZIP Output
  * docxtemplater + PizZip + JSZip
@@ -92,10 +93,35 @@ function buildBaseArgs(pjd) {
   // syntax loop docxtemplater: {{#peserta_lampiran}} ... {{/peserta_lampiran}}
   // — DOBEL kurawal karena project ini pakai delimiters custom {{ }},
   // bukan default { } bawaan docxtemplater.
-  const pesertaLampiran = sorted.map((ps, i) => {
+  const pesertaInfo = sorted.map((ps) => {
     const pgw = getPegawaiById(ps.pegawai_id);
-    return { no: i + 1, nama: pgw?.nama_lengkap || '', jabatan: pgw?.jabatan || '', nip: pgw?.nip || '' };
+    return {
+      nama: pgw?.nama_lengkap || '',
+      jabatan: pgw?.jabatan || '',
+      nip: pgw?.nip || '',
+      pangkat_gol: pgw?.pangkat_golongan
+        || [pgw?.pangkat, pgw?.golongan].filter(Boolean).join(' / ')
+        || '',
+      pangkat: pgw?.pangkat || '',
+      golongan: pgw?.golongan || '',
+    };
   });
+  const withNo = (arr) => arr.map((r, i) => ({ no: i + 1, ...r }));
+  const pesertaLampiran = withNo(pesertaInfo);
+
+  // ── Form SPPD per 6 orang (1 utama + maks 5 pengikut per tabel) ──
+  const sppdGroups = [];
+  for (let i = 0; i < pesertaInfo.length; i += 6) {
+    const grp = withNo(pesertaInfo.slice(i, i + 6));
+    const [utama, ...ikut] = grp;
+    sppdGroups.push({
+      nama_utama        : utama.nama,
+      pangkat_gol_utama : utama.pangkat_gol,
+      jabatan_utama     : utama.jabatan,
+      nip_utama         : utama.nip,
+      pengikut          : ikut,
+    });
+  }
 
   // Build per-N rekap args
   const rekapN = {};
@@ -116,6 +142,13 @@ function buildBaseArgs(pjd) {
   });
 
   return {
+    // ── Dasar dinamis (satu baris = satu dasar, nomor otomatis) ──
+    dasar_list: String(pjd.dasar || '')
+      .split(/\r?\n/)
+      .map((s) => s.trim().replace(/^\d+[.)]\s*/, '').replace(/^[-•]\s*/, ''))
+      .filter(Boolean)
+      .map((teks, i) => ({ no: i + 1, teks })),
+
     // ── Perjalanan ───────────────────────────────────────
     nomor              : pjd.nomor_surat || '',
     nomor_sppd         : pjd.nomor_surat || '',
@@ -181,8 +214,33 @@ function buildBaseArgs(pjd) {
     // ── Loop array (untuk tabel Lampiran dinamis) ────────
     peserta_lampiran   : pesertaLampiran,
 
-    // ── Per-N rekap args ─────────────────────────────────
+    // ── Baris pengikut SPPD (semua kecuali yang diperintah di baris 2) ─
+    pengikut_lampiran  : pesertaLampiran.slice(1).map((r, i) => ({ ...r, no: i + 1 })),
+
+    // ── Grup SPPD @6 orang (1 utama + maks 5 pengikut per tabel) ──
+    sppd_groups        : sppdGroups,
+
+    // ── Per-N rekap args (kompatibel template lama 1–7) ──
     ...rekapN,
+
+    // ── Loop array (untuk tabel Rekap dinamis, tanpa batas) ─
+    rekap_rows: sorted.map((ps, i) => {
+      const pgw = getPegawaiById(ps.pegawai_id);
+      const cp  = calcPesertaFull(ps, pjd);
+      return {
+        no               : i + 1,
+        nama             : pgw?.nama_lengkap || '',
+        nip              : pgw?.nip || '',
+        uang_harian      : formatRupiah(cp.harian),
+        uang_harian_total: formatRupiah(cp.totalH),
+        transport_nominal: ps.dapat_transport ? formatRupiah(parseInt(ps.nominal_transport) || 0) : '',
+        lama_perjalanan  : cp.lama + ' Hari',
+        transport_kali   : ps.dapat_transport ? (parseInt(ps.jumlah_kali) || 1) + ' Kali' : '',
+        transport_total  : ps.dapat_transport ? formatRupiah(cp.totalT) : '',
+        total            : formatRupiah(cp.total),
+        rekening         : pgw?.nomor_rekening || '',
+      };
+    }),
   };
 }
 
@@ -368,7 +426,6 @@ async function generateDocx(b64, args, opts = {}) {
     delimiters    : { start: '{{', end: '}}' }, // template pakai {{tag}}, bukan {tag}
     nullGetter    : () => '',
   });
-  console.log('DEBUG peserta_lampiran:', args.peserta_lampiran); // TODO: hapus setelah debug
   doc.render(args);
   let blob = new Blob([doc.getZip().generate({ type: 'arraybuffer' })], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -440,12 +497,12 @@ function showGeneratedDownloads(files, zipBlob, zipName, errors = []) {
 
   const rows = files.map((file, index) => `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-      <div style="font-size:22px">📄</div>
+      <div style="font-size:22px">${ic('doc', 15)}</div>
       <div style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow-wrap:anywhere">${file.name}</div>
-      <button class="btn btn-secondary btn-sm" onclick="downloadGeneratedDocx(${index})">⬇️ DOCX</button>
+      <button class="btn btn-secondary btn-sm" onclick="downloadGeneratedDocx(${index})">${ic('download', 15)} DOCX</button>
     </div>`).join('');
   const errorInfo = errors.length
-    ? `<div class="alert alert-warning" style="margin-bottom:14px">⚠️ ${errors.length} dokumen gagal dibuat. Detail kesalahan ditampilkan melalui notifikasi.</div>`
+    ? `<div class="alert alert-warning" style="margin-bottom:14px">${ic('alert', 15)} ${errors.length} dokumen gagal dibuat. Detail kesalahan ditampilkan melalui notifikasi.</div>`
     : '';
   const wrapper = document.createElement('div');
   wrapper.innerHTML = modalHTML(
@@ -455,7 +512,7 @@ function showGeneratedDownloads(files, zipBlob, zipName, errors = []) {
      <div style="margin-bottom:8px;color:var(--text-2);font-size:13px">${files.length} file siap diunduh. Pilih file DOCX atau unduh semuanya dalam satu arsip.</div>
      <div>${rows}</div>`,
     `<button class="btn btn-secondary" onclick="closeModal('modal-generate-result')">Tutup</button>
-     <button class="btn btn-primary" onclick="downloadGeneratedZip()">📦 Download Semua (ZIP)</button>`,
+     <button class="btn btn-primary" onclick="downloadGeneratedZip()">${ic('package', 15)} Download Semua (ZIP)</button>`,
     true
   );
   document.body.appendChild(wrapper.firstElementChild);
@@ -467,7 +524,7 @@ async function runGenerate(pjdId, selections) {
   if (!pjd) return toast('Data perjalanan tidak ditemukan', 'error');
 
   const btn = document.getElementById('btn-generate');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
 
   const zip    = new JSZip();
   const nomorSafe = (pjd.nomor_surat || 'SPPD').replace(/[^a-zA-Z0-9]/g, '_');
@@ -528,6 +585,23 @@ async function runGenerate(pjdId, selections) {
           const blob = await generateDocx(tmplB64, args);
           addGeneratedFile(`SPPD_Lembar${lembar}.docx`, blob);
         }
+      } else if (tmpl.jenis === 'nota_dinas') {
+        const nota = sel.nota || {};
+        const args = buildNotaArgs(pjd, nota);
+        const blob = await generateDocx(tmplB64, args);
+        addGeneratedFile('Nota_Dinas.docx', blob);
+        // Simpan isi nota ke record perjalanan biar editan tidak hilang
+        try {
+          const allList = getPJDList();
+          const rec = allList.find(x => x.id === pjdId);
+          if (rec) {
+            rec.nota = { ...(rec.nota || {}), ...nota };
+            savePJDList(allList);
+            await DB.flush();
+          }
+        } catch (saveErr) {
+          console.warn('[Nota Dinas] gagal menyimpan isi nota:', saveErr);
+        }
       } else {
         const args = buildBaseArgs(pjd);
         const blob = await generateDocx(tmplB64, args);
@@ -555,14 +629,14 @@ async function runGenerate(pjdId, selections) {
   gen.unshift({ kwitansiMode: kwitansi ? (kwitansi.includeTransport ? 'harian_transport' : 'harian') : null, id: Date.now(), pjd_id: pjdId, nomor: pjd.nomor_surat, count, errors: errors.length, at: new Date().toISOString() });
   DB.set(KEYS.generated, gen.slice(0, 50));
 
-  if (btn) { btn.disabled = false; btn.textContent = '⚡ Generate Dokumen'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = `${ic('bolt', 15)} Generate Dokumen`; }
   updateGenerateProgress('');
 
   if (errors.length) {
-    errors.forEach(e => toast('⚠️ ' + e, 'warning', 5000));
+    errors.forEach(e => toast(' ' + e, 'warning', 5000));
   }
   if (count > 0) {
-    toast(`✅ ${count} dokumen berhasil digenerate!`, 'success', 5000);
+    toast(` ${count} dokumen berhasil digenerate!`, 'success', 5000);
   } else {
     toast('Tidak ada dokumen yang berhasil digenerate', 'error', 5000);
   }
@@ -619,9 +693,9 @@ function filterGeneratePJDList(list, search) {
 
 function generatePJDOption(p, activeLabel = false) {
   const tujuan = buildTujuanText(p);
-  const label = `${p.nomor_surat || '—'} · ${formatTanggal(p.tanggal_berangkat)} · ${tujuan} (${p.peserta?.length || 0} orang)`;
-  const icon = p.status === 'final' ? '✅' : '📝';
-  return `<option value="${p.id}">${activeLabel ? '📌 Pilihan aktif · ' : ''}${icon} ${label}</option>`;
+  const label = `${escapeHtml(p.nomor_surat || '—')} · ${formatTanggal(p.tanggal_berangkat)} · ${escapeHtml(tujuan)} (${p.peserta?.length || 0} orang)`;
+  const icon = p.status === 'final' ? 'Final' : 'Draft';
+  return `<option value="${p.id}">${activeLabel ? 'Pilihan aktif · ' : ''}${icon} ${label}</option>`;
 }
 
 function onGeneratePJDSearch(value) {
@@ -663,10 +737,10 @@ function renderGeneratePage() {
   if (pjdList.length === 0) {
     c.innerHTML = `
       <div class="empty-state" style="padding:80px 24px">
-        <div class="empty-state-icon">✈️</div>
+        <div class="empty-state-icon">${ic('plane', 28)}</div>
         <div class="empty-state-title">Belum ada data perjalanan dinas</div>
         <div class="empty-state-desc" style="margin-bottom:20px">Buat perjalanan dinas terlebih dahulu sebelum generate dokumen</div>
-        <button class="btn btn-primary" onclick="navigateTo('perjalanan')">✈️ Buat Perjalanan Dinas</button>
+        <button class="btn btn-primary" onclick="navigateTo('perjalanan')">${ic('plane', 15)} Buat Perjalanan Dinas</button>
       </div>`;
     return;
   }
@@ -674,10 +748,10 @@ function renderGeneratePage() {
   if (templates.length === 0) {
     c.innerHTML = `
       <div class="empty-state" style="padding:80px 24px">
-        <div class="empty-state-icon">📄</div>
+        <div class="empty-state-icon">${ic('doc', 28)}</div>
         <div class="empty-state-title">Belum ada template tersimpan</div>
         <div class="empty-state-desc" style="margin-bottom:20px">Upload template .docx terlebih dahulu</div>
-        <button class="btn btn-primary" onclick="navigateTo('template')">📤 Upload Template</button>
+        <button class="btn btn-primary" onclick="navigateTo('template')">${ic('upload', 15)} Upload Template</button>
       </div>`;
     return;
   }
@@ -691,22 +765,22 @@ function renderGeneratePage() {
     <!-- Select Perjalanan -->
     <div class="card mb-6">
       <div class="card-header">
-        <div class="card-icon" style="background:#EBF3FD">✈️</div>
+        <div class="card-icon" style="background:#EBF3FD">${ic('plane', 20)}</div>
         <div><h3>Pilih Perjalanan Dinas</h3><p>Pilih perjalanan yang akan digenerate dokumennya</p></div>
       </div>
       <div class="card-body">
         <div class="form-group">
           <label class="form-label" for="gen-pjd-search">Cari Perjalanan Dinas</label>
           <div class="search-bar" style="width:100%">
-            <span>🔍</span>
+            <span>${ic('search', 15)}</span>
             <input type="text" id="gen-pjd-search"
-              placeholder="Cari nomor, tujuan, kata, peserta, atau tanggal..."
+              placeholder="Cari nomor, tujuan, peserta, tanggal..."
               oninput="onGeneratePJDSearch(this.value)">
           </div>
           <div class="form-text" id="gen-pjd-search-count">${pjdList.length} perjalanan tersedia</div>
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label" for="gen-pjd-select">Hasil Pencarian</label>
+          <label class="form-label" for="gen-pjd-select">Pilih Perjalanan Dinas</label>
           <select class="form-control" id="gen-pjd-select" onchange="onSelectPJD(this.value)" style="font-size:13px">
             <option value="">— Pilih Perjalanan Dinas —</option>
             ${pjdOptions}
@@ -722,11 +796,51 @@ function renderGeneratePage() {
     <div id="gen-template-section" style="display:none">
       <div class="card mb-6">
         <div class="card-header">
-          <div class="card-icon" style="background:#E8F5E9">📄</div>
+          <div class="card-icon" style="background:#E8F5E9">${ic('doc', 20)}</div>
           <div><h3>Pilih Dokumen yang Akan Digenerate</h3><p>Centang jenis dokumen dan pilih template untuk masing-masing</p></div>
         </div>
         <div class="card-body" id="gen-template-body">
           ${renderTemplateSelector()}
+        </div>
+      </div>
+
+      <!-- Isi Nota Dinas (shown when Nota Dinas checked) -->
+      <div class="card mb-6" id="gen-nota-section" style="display:none;border-left:4px solid #283593">
+        <div class="card-header">
+          <div class="card-icon" style="background:#E8EAF6">${ic('notebook', 20)}</div>
+          <div><h3>Isi Nota Dinas</h3><p>Edit langsung — terisi otomatis dari data perjalanan, bisa diubah</p></div>
+        </div>
+        <div class="card-body">
+          <div class="grid-2">
+            <div class="form-group"><label class="form-label">Yth.</label><input type="text" class="form-control" id="nota-nota_yth" placeholder="cth: Plt. Kasubag Umum dan Kepegawaian"></div>
+            <div class="form-group"><label class="form-label">Dari</label><input type="text" class="form-control" id="nota-nota_dari" placeholder="cth: Pelaksana Sub Bagian Umum dan Kepegawaian"></div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group"><label class="form-label">Tembusan</label><input type="text" class="form-control" id="nota-nota_tembusan" placeholder="cth: Plt. Kepala Dinas Kebudayaan"></div>
+            <div class="form-group"><label class="form-label">Tanggal</label><input type="text" class="form-control" id="nota-nota_tanggal" placeholder="cth: 30 Juli 2026"></div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group"><label class="form-label">Nomor</label><input type="text" class="form-control" id="nota-nota_nomor" placeholder="cth: 800/123-Umpeg"></div>
+            <div class="form-group"><label class="form-label">Sifat</label><input type="text" class="form-control" id="nota-nota_sifat" placeholder="Biasa / Penting / Segera"></div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group"><label class="form-label">Lampiran</label><input type="text" class="form-control" id="nota-nota_lampiran" placeholder="-"></div>
+            <div class="form-group"><label class="form-label">Hal</label><input type="text" class="form-control" id="nota-nota_hal" placeholder="cth: Laporan Hasil Edukasi dan Sosialisasi"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Dasar Hukum</label><textarea class="form-control" id="nota-dasar_hukum" rows="2"></textarea></div>
+          <div class="form-group"><label class="form-label">Pelaksanaan</label><textarea class="form-control" id="nota-pelaksanaan" rows="4"></textarea><div class="form-text">Enter = paragraf baru di dokumen hasil.</div></div>
+          <div class="form-group">
+            <button class="btn btn-secondary btn-sm" id="nota-btn-ai" onclick="notaGenerateAI()">${ic('sparkles', 15)} Generate Hasil & Kesimpulan dengan Gemini</button>
+            <div class="form-text">Berdasarkan isian Pelaksanaan di atas. Hanya tersedia di versi Vercel (butuh /api/gemini).</div>
+            <div id="nota-ai-status" style="margin-top:8px"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Hasil</label><textarea class="form-control" id="nota-hasil" rows="4"></textarea></div>
+          <div class="form-group"><label class="form-label">Kesimpulan</label><textarea class="form-control" id="nota-kesimpulan" rows="4"></textarea></div>
+          <div class="grid-2">
+            <div class="form-group"><label class="form-label">Jabatan Penandatangan</label><input type="text" class="form-control" id="nota-jabatan_penandatangan" placeholder="Pelaksana,"></div>
+            <div class="form-group"><label class="form-label">Nama Penandatangan</label><input type="text" class="form-control" id="nota-nama_penandatangan"></div>
+          </div>
+          <div class="form-group"><label class="form-label">NIP Penandatangan</label><input type="text" class="form-control" id="nota-nip_penandatangan" placeholder="NIP. ..."></div>
         </div>
       </div>
 
@@ -739,7 +853,7 @@ function renderGeneratePage() {
             <div id="gen-progress" class="text-sm" style="color:var(--navy);margin-top:4px"></div>
           </div>
           <button class="btn btn-primary btn-lg" id="btn-generate" onclick="triggerGenerate()">
-            ⚡ Generate Dokumen
+            ${ic('bolt', 15)} Generate Dokumen
           </button>
         </div>
       </div>
@@ -749,7 +863,7 @@ function renderGeneratePage() {
     ${genHistory.length > 0 ? `
     <div class="card" style="margin-top:24px">
       <div class="card-header">
-        <div class="card-icon" style="background:#FEF9E7">📦</div>
+        <div class="card-icon" style="background:#FEF9E7;color:#9C6D00">${ic('clock', 20)}</div>
         <div><h3>Riwayat Generate</h3><p>5 generate terakhir</p></div>
       </div>
       <div class="table-wrap"><table>
@@ -757,9 +871,9 @@ function renderGeneratePage() {
         <tbody>
           ${genHistory.map(h => `
             <tr>
-              <td><strong>${h.nomor||'—'}</strong></td>
+              <td><strong>${escapeHtml(h.nomor||'—')}</strong></td>
               <td><span class="badge badge-auto">${h.count} dokumen</span>${h.kwitansiMode ? `<div class="text-muted text-sm">Kwitansi: ${h.kwitansiMode === 'harian_transport' ? 'uang harian + transport' : 'uang harian saja'}</div>` : ''}</td>
-              <td>${h.errors > 0 ? `<span class="badge badge-manual">⚠️ ${h.errors} error</span>` : '<span class="badge badge-auto">✅ Berhasil</span>'}</td>
+              <td>${h.errors > 0 ? `<span class="badge badge-manual">${ic('alert', 12)} ${h.errors} error</span>` : `<span class="badge badge-auto">${ic('check', 12)} Berhasil</span>`}</td>
               <td class="text-muted text-sm">${new Date(h.at).toLocaleString('id-ID')}</td>
             </tr>`).join('')}
         </tbody>
@@ -769,25 +883,26 @@ function renderGeneratePage() {
 
 function renderTemplateSelector() {
   const JENIS = [
-    { key: 'sppd',          label: 'SPPD',           icon: '📋', note: 'Generate 2 lembar otomatis (Lembar 1 & 2)' },
-    { key: 'kwitansi',      label: 'Kwitansi',       icon: '🧾', note: '1 lembar = 1–3 peserta (atau 1 file/orang jika template loop)' },
-    { key: 'surat_tugas',   label: 'Surat Tugas',    icon: '📝', note: 'Generate 1 file' },
-    { key: 'rekap_belanja', label: 'Rekap Belanja',  icon: '📊', note: 'Generate 1 file' },
-    { key: 'custom',        label: 'Custom',         icon: '📁', note: 'Template custom' },
+    { key: 'sppd',          label: 'SPPD',           icon: 'doc', note: 'Generate 2 lembar otomatis (Lembar 1 & 2)' },
+    { key: 'kwitansi',      label: 'Kwitansi',       icon: 'doc', note: '1 lembar = 1–3 peserta (atau 1 file/orang jika template loop)' },
+    { key: 'surat_tugas',   label: 'Surat Tugas',    icon: 'doc', note: 'Generate 1 file' },
+    { key: 'rekap_belanja', label: 'Rekap Belanja',  icon: 'chart', note: 'Generate 1 file' },
+    { key: 'nota_dinas',    label: 'Nota Dinas',     icon: 'doc', note: 'Generate 1 file — isi nota bisa diedit di bawah' },
+    { key: 'custom',        label: 'Custom',         icon: 'doc', note: 'Template custom' },
   ];
 
   return JENIS.map(j => {
     const tmpls = AppState.templates.filter(t => t.jenis === j.key);
     if (tmpls.length === 0) return '';
 
-    const opts = tmpls.map(t => `<option value="${t.id}">${t.nama}${t.scope === 'global' ? ' 🌐' : ''}</option>`).join('');
+    const opts = tmpls.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.nama)}${t.scope === 'global' ? ' · Global' : ''}</option>`).join('');
 
     return `
       <div class="gen-item" id="genitem-${j.key}" style="display:flex;align-items:center;gap:14px;padding:14px;border:2px solid var(--border);border-radius:var(--radius);margin-bottom:10px;transition:var(--transition)">
         <input type="checkbox" id="gchk-${j.key}" class="gen-chk"
           style="width:18px;height:18px;cursor:pointer;flex-shrink:0;accent-color:var(--navy)"
           onchange="onGenCheck('${j.key}', this.checked)">
-        <div style="font-size:22px;flex-shrink:0">${j.icon}</div>
+        <div style="flex-shrink:0;color:var(--text-2)">${ic(j.icon, 22)}</div>
         <div style="flex:1">
           <div style="font-weight:700;font-size:13px">${j.label}</div>
           <div class="text-muted text-sm">${j.note}</div>
@@ -818,12 +933,154 @@ function onGenCheck(jenis, checked) {
       if (transport) transport.checked = false;
     }
   }
+  if (jenis === 'nota_dinas') {
+    const editor = document.getElementById('gen-nota-section');
+    if (editor) editor.style.display = checked ? '' : 'none';
+  }
   const item = document.getElementById('genitem-' + jenis);
   if (item) {
     item.style.borderColor = checked ? 'var(--navy)' : 'var(--border)';
     item.style.background  = checked ? '#EEF3FB' : '';
   }
   updateGenSummary();
+}
+
+// ─── NOTA DINAS: form isi → args ────────────────────────────
+const NOTA_FIELDS = [
+  'nota_yth', 'nota_dari', 'nota_tembusan', 'nota_tanggal',
+  'nota_nomor', 'nota_sifat', 'nota_lampiran', 'nota_hal',
+  'dasar_hukum', 'pelaksanaan', 'hasil', 'kesimpulan',
+  'jabatan_penandatangan', 'nama_penandatangan', 'nip_penandatangan',
+];
+
+function notaDefaults(pjd) {
+  const tujuan = buildTujuanText(pjd);
+  const sorted = sortedPeserta(pjd);
+  const pgw1 = sorted.length ? getPegawaiById(sorted[0].pegawai_id) : null;
+  const maksud = (pjd.maksud_perjalanan || '').trim();
+  return {
+    nota_yth: '',
+    nota_dari: '',
+    nota_tembusan: '',
+    nota_tanggal: formatTanggal(pjd.tanggal_surat),
+    nota_nomor: '',
+    nota_sifat: 'Biasa',
+    nota_lampiran: '-',
+    nota_hal: maksud ? `Laporan Hasil ${maksud}` : '',
+    dasar_hukum: pjd.dasar || '',
+    pelaksanaan: `Kegiatan ${maksud || 'tersebut'} dilaksanakan pada tanggal ${formatTanggal(pjd.tanggal_berangkat)}, bertempat di ${tujuan}.`,
+    hasil: '',
+    kesimpulan: '',
+    jabatan_penandatangan: 'Pelaksana,',
+    nama_penandatangan: pgw1?.nama_lengkap || '',
+    nip_penandatangan: pgw1?.nip ? `NIP. ${pgw1.nip}` : '',
+  };
+}
+
+function prefillNotaForm(pjd) {
+  const saved = pjd.nota || {};
+  const defaults = notaDefaults(pjd);
+  NOTA_FIELDS.forEach(k => {
+    const el = document.getElementById('nota-' + k);
+    if (el) el.value = (saved[k] !== undefined && saved[k] !== null && saved[k] !== '') ? saved[k] : (defaults[k] || '');
+  });
+}
+
+function collectNotaInput() {
+  const out = {};
+  NOTA_FIELDS.forEach(k => {
+    out[k] = document.getElementById('nota-' + k)?.value ?? '';
+  });
+  return out;
+}
+
+function buildNotaArgs(pjd, nota) {
+  // linebreaks:true di generateDocx mengubah \n jadi paragraf baru
+  return { ...buildBaseArgs(pjd), ...nota };
+}
+
+// ─── NOTA DINAS: generate Hasil & Kesimpulan via Gemini ────
+let NOTA_AI_BUSY = false;
+
+async function notaGenerateAI() {
+  if (NOTA_AI_BUSY) return;
+  const pelaksanaan = document.getElementById('nota-pelaksanaan')?.value.trim() || '';
+  if (!pelaksanaan) return toast('Isi Pelaksanaan dulu biar Gemini punya bahan', 'error');
+
+  NOTA_AI_BUSY = true;
+  const notaSession = (typeof Auth !== 'undefined') ? await Auth.getSession().catch(() => null) : null;
+  if (!notaSession?.access_token) {
+    NOTA_AI_BUSY = false;
+    return toast('Sesi berakhir. Login ulang untuk memakai fitur AI.', 'error');
+  }
+  const btn = document.getElementById('nota-btn-ai');
+  const status = document.getElementById('nota-ai-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menghubungi Gemini...'; }
+  if (status) status.innerHTML = `<div class="alert alert-info">${ic('sparkles', 15)} Gemini sedang menyusun Hasil & Kesimpulan...</div>`;
+
+  const pjdId = document.getElementById('gen-pjd-select')?.value;
+  const pjd = typeof getPJDList !== 'undefined' ? getPJDList().find(x => x.id === pjdId) : null;
+
+  try {
+    const reqBody = JSON.stringify({
+      mode: 'nota_dinas',
+      hal: document.getElementById('nota-nota_hal')?.value || '',
+      dasar_hukum: document.getElementById('nota-dasar_hukum')?.value || '',
+      pelaksanaan,
+      tanggal: pjd ? formatTanggal(pjd.tanggal_berangkat) : '',
+      tujuan: pjd ? buildTujuanText(pjd) : '',
+    });
+    let res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + notaSession.access_token,
+      },
+      body: reqBody,
+    });
+    if (res.status === 401 && typeof Auth !== 'undefined' && typeof Auth.refreshSession === 'function') {
+      const refreshed = await Auth.refreshSession();
+      if (refreshed?.access_token) {
+        res = await fetch('/api/gemini', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + refreshed.access_token,
+          },
+          body: reqBody,
+        });
+      }
+    }
+
+    const ctype = res.headers.get('content-type') || '';
+    if (!ctype.includes('application/json')) {
+      throw new Error('Backend AI tidak jalan di server lokal ini. Pakai scripts/dev-server.py (terus ke Vercel) atau isi manual.');
+    }
+    const data = await res.json().catch(() => ({ error: 'Server mengembalikan respons yang tidak bisa dibaca' }));
+    if (!res.ok || data.error) throw new Error(data.error || 'Gagal menghubungi server');
+
+    const hasilEl = document.getElementById('nota-hasil');
+    const simpulEl = document.getElementById('nota-kesimpulan');
+    if (hasilEl) hasilEl.value = data.hasil || '';
+    if (simpulEl) simpulEl.value = data.kesimpulan || '';
+
+    if (status) {
+      status.innerHTML = data.fallback
+        ? `<div class="alert alert-warning">${data.warning || 'Kuota Gemini penuh. Draft sementara dibuat otomatis, silakan edit.'}</div>`
+        : `<div class="alert alert-success">${ic('check', 15)} Hasil & Kesimpulan terisi. Review dan edit sesuai kebutuhan.</div>`;
+    }
+    toast(data.fallback ? 'Draft sementara berhasil dibuat' : 'Hasil & Kesimpulan berhasil dibuat', data.fallback ? 'warning' : 'success');
+  } catch (err) {
+    console.warn(err);
+    const msg = /failed to fetch|networkerror|load failed/i.test(err.message)
+      ? 'Tidak bisa menghubungi /api/gemini. Fitur AI hanya tersedia di versi Vercel — di lokal isi manual.'
+      : err.message;
+    if (status) status.innerHTML = `<div class="alert alert-warning">${ic('alert', 15)} ${msg}</div>`;
+    toast('Gagal: ' + msg, 'error');
+  } finally {
+    NOTA_AI_BUSY = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = `${ic('sparkles', 14)} Generate Hasil & Kesimpulan dengan Gemini`; }
+  }
 }
 
 function updateGenSummary() {
@@ -859,13 +1116,14 @@ function updateGenSummary() {
 }
 
 function getGenSelections() {
-  const JENIS = ['sppd','kwitansi','surat_tugas','rekap_belanja','custom'];
+  const JENIS = ['sppd','kwitansi','surat_tugas','rekap_belanja','nota_dinas','custom'];
   return JENIS.filter(j => document.getElementById('gchk-' + j)?.checked)
     .map(j => ({
       jenis: j,
-      label: { sppd:'SPPD', kwitansi:'Kwitansi', surat_tugas:'Surat Tugas', rekap_belanja:'Rekap Belanja', custom:'Custom' }[j],
+      label: { sppd:'SPPD', kwitansi:'Kwitansi', surat_tugas:'Surat Tugas', rekap_belanja:'Rekap Belanja', nota_dinas:'Nota Dinas', custom:'Custom' }[j],
       templateId: document.getElementById('gsel-' + j)?.value,
       ...(j === 'kwitansi' ? { includeTransport: document.getElementById('gen-include-transport')?.checked === true } : {}),
+      ...(j === 'nota_dinas' ? { nota: collectNotaInput() } : {}),
     }))
     .filter(s => s.templateId);
 }
@@ -889,7 +1147,7 @@ function onSelectPJD(pjdId) {
 
   // Warning for draft
   const draftWarn = pjd.status !== 'final'
-    ? `<div class="alert alert-warning" style="margin-bottom:12px">⚠️ Perjalanan ini masih berstatus <strong>Draft</strong>. Disarankan finalisasi terlebih dahulu di halaman Perjalanan Dinas.</div>`
+    ? `<div class="alert alert-warning" style="margin-bottom:12px">${ic('alert', 15)} Perjalanan ini masih berstatus <strong>Draft</strong>. Disarankan finalisasi terlebih dahulu di halaman Perjalanan Dinas.</div>`
     : '';
 
   // Peserta list
@@ -898,9 +1156,9 @@ function onSelectPJD(pjdId) {
     const cp  = calcPesertaFull(ps, pjd);
     return `<tr>
       <td>${i+1}</td>
-      <td><strong>${pgw?.nama_lengkap||'?'}</strong><br><span class="text-muted text-sm">${pgw?.golongan||''}</span></td>
+      <td><strong>${escapeHtml(pgw?.nama_lengkap || '?')}</strong><br><span class="text-muted text-sm">${escapeHtml(pgw?.golongan||'')}</span></td>
       <td>${formatRupiah(cp.harian)} × ${lama} hari</td>
-      <td>${ps.dapat_transport ? formatRupiah(cp.totalT) + ' 🚗' : '<span class="text-muted">—</span>'}</td>
+      <td>${ps.dapat_transport ? formatRupiah(cp.totalT) + ` ${ic('car', 15)}` : '<span class="text-muted">—</span>'}</td>
       <td><strong style="color:var(--navy)">${formatRupiah(cp.total)}</strong></td>
     </tr>`;
   }).join('');
@@ -910,12 +1168,12 @@ function onSelectPJD(pjdId) {
     <div class="card mb-6">
       <div class="card-header" style="background:var(--surface-2)">
         <div style="flex:1">
-          <div style="font-weight:800;font-size:15px">${pjd.nomor_surat}</div>
+          <div style="font-weight:800;font-size:15px">${escapeHtml(pjd.nomor_surat)}</div>
           <div class="pjd-meta" style="margin-top:4px">
-            <span>📅 ${formatTanggal(pjd.tanggal_berangkat)} s.d ${formatTanggal(pjd.tanggal_kembali)}</span>
+            <span>${ic('calendar', 15)} ${formatTanggal(pjd.tanggal_berangkat)} s.d ${formatTanggal(pjd.tanggal_kembali)}</span>
             <span>⏱ ${terbilangHari(lama)}</span>
-            <span>📍 ${tujuan}</span>
-            <span>🚗 ${pjd.alat_angkutan||'—'}</span>
+            <span>${ic('mappin', 15)} ${escapeHtml(tujuan)}</span>
+            <span>${ic('car', 15)} ${escapeHtml(pjd.alat_angkutan||'—')}</span>
           </div>
         </div>
         <div style="text-align:right">
@@ -930,6 +1188,7 @@ function onSelectPJD(pjdId) {
     </div>`;
 
   if (section) section.style.display = '';
+  prefillNotaForm(pjd);
   updateGenSummary();
 }
 
@@ -946,3 +1205,7 @@ function triggerGenerate() {
 
   runGenerate(pjdId, selections);
 }
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { buildBaseArgs, buildTujuanText, calcGrandTotalFull, calcPesertaFull, downloadGeneratedDocx, downloadGeneratedZip, getDocxtemplaterClass, getFirstUK, notaGenerateAI, onGenCheck, onGeneratePJDSearch, onSelectPJD, renderGeneratePage, sortedPeserta, triggerGenerate, updateGenSummary });
+})();

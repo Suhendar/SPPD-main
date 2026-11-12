@@ -1,3 +1,4 @@
+(() => {
 /**
  * db.js — Lapisan data: cache + Supabase (dengan fallback localStorage)
  * Migrasi otomatis dari localStorage saat login pertama kali.
@@ -163,10 +164,24 @@ const DB = {
     const sb = Auth.client();
     if (!sb || !this._userId) return;
 
-    const { data, error } = await sb
+    let { data, error } = await sb
       .from('sppd_user_store')
       .select('store_key, data')
       .eq('user_id', this._userId);
+
+    if (error && typeof Auth.isJwtExpired === 'function' && Auth.isJwtExpired(error)) {
+      const refreshed = await Auth.refreshSession();
+      if (refreshed?.user?.id) {
+        this._userId = refreshed.user.id;
+        ({ data, error } = await sb
+          .from('sppd_user_store')
+          .select('store_key, data')
+          .eq('user_id', this._userId));
+      } else {
+        await Auth.signOut();
+        return;
+      }
+    }
 
     if (error) throw error;
 
@@ -244,15 +259,40 @@ const DB = {
     const sb = Auth.client();
     if (!sb || !this._userId) return;
 
-    const { error } = await sb.from('sppd_user_store').upsert(
-      {
-        user_id: this._userId,
-        store_key: key,
-        data: val,
-        updated_at: new Date().toISOString(),
-      },
+    const payload = {
+      user_id: this._userId,
+      store_key: key,
+      data: val,
+      updated_at: new Date().toISOString(),
+    };
+
+    let { error } = await sb.from('sppd_user_store').upsert(
+      payload,
       { onConflict: 'user_id,store_key' },
     );
+
+    if (error && typeof Auth.isJwtExpired === 'function' && Auth.isJwtExpired(error)) {
+      const refreshed = await Auth.refreshSession();
+      if (refreshed?.user?.id) {
+        this._userId = refreshed.user.id;
+        payload.user_id = this._userId;
+        ({ error } = await sb.from('sppd_user_store').upsert(
+          payload,
+          { onConflict: 'user_id,store_key' },
+        ));
+      } else {
+        try {
+          localStorage.setItem(key, JSON.stringify(val));
+        } catch {
+          // Abaikan bila localStorage penuh
+        }
+        if (typeof toast === 'function') {
+          toast('Sesi berakhir. Silakan login kembali.', 'error', 4000);
+        }
+        setTimeout(() => Auth.signOut(), 1500);
+        return;
+      }
+    }
 
     if (error) throw error;
   },
@@ -285,9 +325,9 @@ const DB = {
   _seedTarif() {
     if (this.get(KEYS.tarif)) return;
     this.set(KEYS.tarif, {
-      dalam_kota: { uang_harian: 0, label: 'Dalam Kota / Dalam Daerah', icon: '🏙️', tingkat: 'Dalam Daerah' },
-      luar_kota: { uang_harian: 0, label: 'Luar Kota / Luar Daerah', icon: '🚗', tingkat: 'Luar Daerah' },
-      luar_provinsi: { uang_harian: 0, label: 'Luar Provinsi', icon: '✈️', tingkat: 'Luar Provinsi' },
+      dalam_kota: { uang_harian: 0, label: 'Dalam Kota / Dalam Daerah', icon: 'city', tingkat: 'Dalam Daerah' },
+      luar_kota: { uang_harian: 0, label: 'Luar Kota / Luar Daerah', icon: 'car', tingkat: 'Luar Daerah' },
+      luar_provinsi: { uang_harian: 0, label: 'Luar Provinsi', icon: 'plane', tingkat: 'Luar Provinsi' },
     });
   },
 
@@ -325,3 +365,7 @@ const DB = {
     this._ready = true;
   },
 };
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { DB, KEYS });
+})();

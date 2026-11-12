@@ -1,3 +1,4 @@
+(() => {
 /**
  * master.js — Phase 2: Data Master CRUD
  * Unit Kerja, Pegawai, Tarif, Kecamatan, Kode SIPD
@@ -19,7 +20,7 @@ function modalHTML(id, title, bodyHtml, footerHtml, large = false) {
     <div class="modal ${large ? 'modal-lg' : ''}">
       <div class="modal-header">
         <h3>${title}</h3>
-        <button class="modal-close" onclick="closeModal('${id}')">✕</button>
+        <button class="modal-close" onclick="closeModal('${id}')">${ic('x', 12)}</button>
       </div>
       <div class="modal-body">${bodyHtml}</div>
       <div class="modal-footer">${footerHtml}</div>
@@ -67,27 +68,27 @@ function renderUnitKerja() {
     </div>
     ${list.length === 0 ? `
       <div class="empty-state">
-        <div class="empty-state-icon">🏛️</div>
+        <div class="empty-state-icon">${ic('building', 28)}</div>
         <div class="empty-state-title">Belum ada data unit kerja</div>
         <div class="empty-state-desc">Tambah unit kerja untuk mulai mengisi data perjalanan dinas</div>
       </div>` : list.map(uk => `
       <div class="card mb-4">
         <div class="card-header">
-          <div class="card-icon" style="background:#E3F2FD;font-size:20px">🏛️</div>
+          <div class="card-icon" style="background:#E3F2FD;font-size:20px">${ic('building', 20)}</div>
           <div style="flex:1">
-            <h3>${uk.nama}</h3>
-            <p style="font-size:11px">${uk.kota} · ${uk.alamat?.substring(0,60)}...</p>
+            <h3>${escapeHtml(uk.nama)}</h3>
+            <p style="font-size:11px">${escapeHtml(uk.kota)} · ${escapeHtml(uk.alamat?.substring(0,60))}...</p>
           </div>
           <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm" onclick="openUKModal('${uk.id}')">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteUK('${uk.id}')">🗑️</button>
+            <button class="btn btn-secondary btn-sm" onclick="openUKModal('${uk.id}')">${ic('edit', 15)} Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteUK('${uk.id}')">${ic('trash', 15)}</button>
           </div>
         </div>
         <div class="card-body" style="padding:14px 20px">
           <div class="grid-3" style="gap:10px;font-size:12px">
-            <div><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">PPK</div><strong>${uk.nama_ppk || '—'}</strong><br><span class="text-muted">${uk.nip_ppk || ''}</span></div>
-            <div><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Kepala Dinas</div><strong>${uk.nama_kepala || '—'}</strong><br><span class="text-muted">${uk.nip_kepala || ''}</span></div>
-            <div><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Bendahara</div><strong>${uk.nama_bendahara || '—'}</strong><br><span class="text-muted">${uk.nip_bendahara || ''}</span></div>
+            <div><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">PPK</div><strong>${escapeHtml(uk.nama_ppk || '—')}</strong><br><span class="text-muted">${escapeHtml(uk.nip_ppk || '')}</span></div>
+            <div><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Kepala Dinas</div><strong>${escapeHtml(uk.nama_kepala || '—')}</strong><br><span class="text-muted">${escapeHtml(uk.nip_kepala || '')}</span></div>
+            <div><div class="text-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Bendahara</div><strong>${escapeHtml(uk.nama_bendahara || '—')}</strong><br><span class="text-muted">${escapeHtml(uk.nip_bendahara || '')}</span></div>
           </div>
         </div>
       </div>`).join('')}
@@ -99,17 +100,17 @@ function ukModal(id) {
   const v = uk || {};
   return modalHTML('modal-uk', id ? 'Edit Unit Kerja' : 'Tambah Unit Kerja', `
     <div class="form-group"><label class="form-label">Nama Dinas (Singkat) *</label>
-      <input class="form-control" id="uk-nama" value="${v.nama||''}" placeholder="Dinas Kebudayaan"></div>
+      <input class="form-control" id="uk-nama" value="${escapeHtml(v.nama||'')}" placeholder="Dinas Kebudayaan"></div>
     <div class="form-group"><label class="form-label">Nama Lengkap / SKPD</label>
       <input class="form-control" id="uk-skpd" value="${v.skpd||''}" placeholder="Dinas Kebudayaan dan Pariwisata Kabupaten Bogor"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Kota *</label>
-        <input class="form-control" id="uk-kota" value="${v.kota||''}" placeholder="Cibinong"></div>
+        <input class="form-control" id="uk-kota" value="${escapeHtml(v.kota||'')}" placeholder="Cibinong"></div>
       <div class="form-group"><label class="form-label">Tempat Kedudukan (SPPD)</label>
         <input class="form-control" id="uk-kedudukan" value="${v.tempat_kedudukan||''}" placeholder="Sukaraja"></div>
     </div>
     <div class="form-group"><label class="form-label">Alamat Lengkap</label>
-      <input class="form-control" id="uk-alamat" value="${v.alamat||''}" placeholder="Vivo Mall Lantai 1 Jl. Raya Jakarta - Bogor..."></div>
+      <input class="form-control" id="uk-alamat" value="${escapeHtml(v.alamat||'')}" placeholder="Vivo Mall Lantai 1 Jl. Raya Jakarta - Bogor..."></div>
     <div class="form-group"><label class="form-label">Instansi Pembayar (Kwitansi)</label>
       <input class="form-control" id="uk-instansi" value="${v.instansi_pembayar||'PEMERINTAH KABUPATEN BOGOR'}" placeholder="PEMERINTAH KABUPATEN BOGOR"></div>
     <hr style="margin:16px 0;border-color:var(--border)">
@@ -118,29 +119,29 @@ function ukModal(id) {
       <input class="form-control" id="uk-pejabat-ppk" value="${v.pejabat_ppk||''}" placeholder="Sekretaris Dinas Kebudayaan"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Nama PPK</label>
-        <input class="form-control" id="uk-nama-ppk" value="${v.nama_ppk||''}" placeholder="Dr Ridwan Said, S.STP, M. Si."></div>
+        <input class="form-control" id="uk-nama-ppk" value="${escapeHtml(v.nama_ppk||'')}" placeholder="Dr Ridwan Said, S.STP, M. Si."></div>
       <div class="form-group"><label class="form-label">NIP PPK</label>
-        <input class="form-control" id="uk-nip-ppk" value="${v.nip_ppk||''}" placeholder="198209082001121001"></div>
+        <input class="form-control" id="uk-nip-ppk" value="${escapeHtml(v.nip_ppk||'')}" placeholder="198209082001121001"></div>
     </div>
     <hr style="margin:16px 0;border-color:var(--border)">
     <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:12px">Kepala Dinas (Surat Tugas)</div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Nama Kepala Dinas</label>
-        <input class="form-control" id="uk-nama-kepala" value="${v.nama_kepala||''}" placeholder="..."></div>
+        <input class="form-control" id="uk-nama-kepala" value="${escapeHtml(v.nama_kepala||'')}" placeholder="..."></div>
       <div class="form-group"><label class="form-label">NIP Kepala Dinas</label>
-        <input class="form-control" id="uk-nip-kepala" value="${v.nip_kepala||''}" placeholder="..."></div>
+        <input class="form-control" id="uk-nip-kepala" value="${escapeHtml(v.nip_kepala||'')}" placeholder="..."></div>
     </div>
     <hr style="margin:16px 0;border-color:var(--border)">
     <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:12px">Bendahara Pengeluaran (Rekap Belanja)</div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Nama Bendahara</label>
-        <input class="form-control" id="uk-nama-bend" value="${v.nama_bendahara||''}" placeholder="YUSUF JUNAEDI"></div>
+        <input class="form-control" id="uk-nama-bend" value="${escapeHtml(v.nama_bendahara||'')}" placeholder="YUSUF JUNAEDI"></div>
       <div class="form-group"><label class="form-label">NIP Bendahara</label>
-        <input class="form-control" id="uk-nip-bend" value="${v.nip_bendahara||''}" placeholder="198208122009011003"></div>
+        <input class="form-control" id="uk-nip-bend" value="${escapeHtml(v.nip_bendahara||'')}" placeholder="198208122009011003"></div>
     </div>
   `, `
     <button class="btn btn-secondary" onclick="closeModal('modal-uk')">Batal</button>
-    <button class="btn btn-primary" onclick="saveUK('${id||''}')">💾 Simpan</button>
+    <button class="btn btn-primary" onclick="saveUK('${id||''}')">${ic('save', 15)} Simpan</button>
   `, true);
 }
 
@@ -175,7 +176,7 @@ function saveUK(id) {
   DB.set(KEYS.unitKerja, list);
   closeModal('modal-uk');
   renderUnitKerja();
-  toast(`Unit kerja "${obj.nama}" disimpan`, 'success');
+  toast(`Unit kerja "${escapeHtml(obj.nama)}" disimpan`, 'success');
 }
 
 function deleteUK(id) {
@@ -211,7 +212,7 @@ function renderPegawai(filter = '') {
       </div>
       <div class="table-toolbar-right">
         <div class="search-bar" style="width:220px">
-          <span>🔍</span>
+          <span>${ic('search', 15)}</span>
           <input type="text" placeholder="Cari nama/NIP..." id="pegawai-search"
             oninput="renderPegawai(this.value.toLowerCase())" value="${filter}">
         </div>
@@ -220,7 +221,7 @@ function renderPegawai(filter = '') {
     </div>
     ${list.length === 0 ? `
       <div class="empty-state">
-        <div class="empty-state-icon">👤</div>
+        <div class="empty-state-icon">${ic('user', 28)}</div>
         <div class="empty-state-title">Belum ada data pegawai</div>
         <div class="empty-state-desc">Tambah pegawai untuk mulai membuat perjalanan dinas</div>
       </div>` : `
@@ -233,14 +234,14 @@ function renderPegawai(filter = '') {
           <tbody>
             ${list.map(p => `
               <tr>
-                <td><strong>${p.nama_lengkap}</strong></td>
-                <td><span class="tbl-mono">${p.nip||'—'}</span></td>
-                <td>${p.pangkat ? `${p.pangkat} / ` : ''}${p.golongan||'—'}</td>
-                <td>${p.jabatan||'—'}</td>
-                <td><span class="tbl-mono">${p.nomor_rekening||'—'}</span></td>
+                <td><strong>${escapeHtml(p.nama_lengkap)}</strong></td>
+                <td><span class="tbl-mono">${escapeHtml(p.nip||'—')}</span></td>
+                <td>${p.pangkat ? `${escapeHtml(p.pangkat)} / ` : ''}${escapeHtml(p.golongan||'—')}</td>
+                <td>${escapeHtml(p.jabatan||'—')}</td>
+                <td><span class="tbl-mono">${escapeHtml(p.nomor_rekening||'—')}</span></td>
                 <td>
-                  <button class="btn btn-secondary btn-sm" onclick="openPegawaiModal('${p.id}')">✏️</button>
-                  <button class="btn btn-danger btn-sm" onclick="deletePegawai('${p.id}')">🗑️</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openPegawaiModal('${p.id}')">${ic('edit', 15)}</button>
+                  <button class="btn btn-danger btn-sm" onclick="deletePegawai('${p.id}')">${ic('trash', 15)}</button>
                 </td>
               </tr>`).join('')}
           </tbody>
@@ -253,7 +254,7 @@ function pegawaiModal(id) {
   const p = id ? DB.getArr(KEYS.pegawai).find(x => x.id === id) : {};
   const v = p || {};
   const ukOptions = DB.getArr(KEYS.unitKerja).map(uk =>
-    `<option value="${uk.id}" ${v.unit_kerja_id === uk.id ? 'selected' : ''}>${uk.nama}</option>`
+    `<option value="${uk.id}" ${v.unit_kerja_id === uk.id ? 'selected' : ''}>${escapeHtml(uk.nama)}</option>`
   ).join('');
   const golOptions = GOLONGAN_OPTIONS.map(g =>
     `<option value="${g}" ${v.golongan === g ? 'selected' : ''}>${g}</option>`
@@ -261,10 +262,10 @@ function pegawaiModal(id) {
 
   return modalHTML('modal-pegawai', id ? 'Edit Pegawai' : 'Tambah Pegawai', `
     <div class="form-group"><label class="form-label">Nama Lengkap (dengan gelar) *</label>
-      <input class="form-control" id="pgw-nama" value="${v.nama_lengkap||''}" placeholder="Dr. Ridwan Said, S.STP, M.Si"></div>
+      <input class="form-control" id="pgw-nama" value="${escapeHtml(v.nama_lengkap||'')}" placeholder="Dr. Ridwan Said, S.STP, M.Si"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">NIP *</label>
-        <input class="form-control" id="pgw-nip" value="${v.nip||''}" placeholder="198209082001121001"></div>
+        <input class="form-control" id="pgw-nip" value="${escapeHtml(v.nip||'')}" placeholder="198209082001121001"></div>
       <div class="form-group"><label class="form-label">Nomor Rekening Bank</label>
         <input class="form-control" id="pgw-rek" value="${v.nomor_rekening||''}" placeholder="0078230509101"></div>
     </div>
@@ -284,7 +285,7 @@ function pegawaiModal(id) {
       </select></div>
   `, `
     <button class="btn btn-secondary" onclick="closeModal('modal-pegawai')">Batal</button>
-    <button class="btn btn-primary" onclick="savePegawai('${id||''}')">💾 Simpan</button>
+    <button class="btn btn-primary" onclick="savePegawai('${id||''}')">${ic('save', 15)} Simpan</button>
   `);
 }
 
@@ -312,7 +313,7 @@ function savePegawai(id) {
   DB.set(KEYS.pegawai, list);
   closeModal('modal-pegawai');
   renderPegawai();
-  toast(`Pegawai "${obj.nama_lengkap}" disimpan`, 'success');
+  toast(`Pegawai "${escapeHtml(obj.nama_lengkap)}" disimpan`, 'success');
 }
 
 function deletePegawai(id) {
@@ -343,7 +344,7 @@ function renderTarif() {
           <input type="number" class="form-control" id="tarif-${key}"
             value="${t.uang_harian||0}" min="0" step="1000"
             style="font-size:13px" placeholder="0">
-          <button class="btn btn-primary" onclick="saveTarif('${key}')">✓</button>
+          <button class="btn btn-primary" onclick="saveTarif('${key}')">${ic('check', 15)}</button>
         </div>
       </div>
     </div>`).join('');
@@ -355,7 +356,7 @@ function renderTarif() {
       </div>
     </div>
     <div class="alert alert-info mb-6">
-      💡 Tarif uang harian dibedakan berdasarkan jenis perjalanan. Isi sesuai dengan Peraturan Bupati yang berlaku. Klik ✓ setelah mengubah nilai.
+      ${ic('bulb', 15)} Tarif uang harian dibedakan berdasarkan jenis perjalanan. Isi sesuai dengan Peraturan Bupati yang berlaku. Klik ${ic('check', 15)} setelah mengubah nilai.
     </div>
     <div class="tarif-grid">${cards}</div>`;
 }
@@ -390,15 +391,15 @@ function renderKecamatan(filter = '') {
       </div>
       <div class="table-toolbar-right">
         <div class="search-bar kec-search">
-          <span>🔍</span>
+          <span>${ic('search', 15)}</span>
           <input type="text" placeholder="Cari kecamatan..." id="kec-search"
             oninput="renderKecamatan(this.value.toLowerCase())" value="${filter}">
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="saveAllKecamatan()">💾 Simpan Semua</button>
+        <button class="btn btn-secondary btn-sm" onclick="saveAllKecamatan()">${ic('save', 15)} Simpan Semua</button>
       </div>
     </div>
     <div class="alert alert-info mb-4">
-      💡 Isi tarif transport PP (pulang-pergi) per kecamatan sesuai standar biaya daerah. Tarif dihitung: nominal × jumlah kali × lama perjalanan.
+      ${ic('bulb', 15)} Isi tarif transport PP (pulang-pergi) per kecamatan sesuai standar biaya daerah. Tarif dihitung: nominal × jumlah kali × lama perjalanan.
     </div>
     <div class="card">
       <div class="table-wrap"><table>
@@ -466,15 +467,15 @@ function renderKotaTujuan(filter = '') {
       </div>
       <div class="table-toolbar-right">
         <div class="search-bar kota-search">
-          <span>🔍</span>
+          <span>${ic('search', 15)}</span>
           <input type="text" placeholder="Cari kota..." id="kota-search"
             oninput="renderKotaTujuan(this.value.toLowerCase())" value="${filter}">
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="saveAllKotaTujuan()">💾 Simpan Semua</button>
+        <button class="btn btn-secondary btn-sm" onclick="saveAllKotaTujuan()">${ic('save', 15)} Simpan Semua</button>
       </div>
     </div>
     <div class="alert alert-info mb-4">
-      💡 Preset 10 kota besar untuk perjalanan Luar Kota/Luar Provinsi. Isi tarif transport PP (pesawat/kereta/dll, perkiraan) sebagai saran otomatis — tetap bisa diedit manual per peserta saat input perjalanan dinas.
+      ${ic('bulb', 15)} Preset 10 kota besar untuk perjalanan Luar Kota/Luar Provinsi. Isi tarif transport PP (pesawat/kereta/dll, perkiraan) sebagai saran otomatis — tetap bisa diedit manual per peserta saat input perjalanan dinas.
     </div>
     <div class="card">
       <div class="table-wrap"><table>
@@ -540,11 +541,11 @@ function renderSipd() {
       </div>
     </div>
     <div class="alert alert-warning mb-4">
-      ⚠️ Kode rekening SIPD adalah kode anggaran kegiatan, <strong>bukan</strong> nomor rekening bank. Contoh: <code class="tbl-mono">5.1.02.04.001.00003</code>
+      ${ic('alert', 15)} Kode rekening SIPD adalah kode anggaran kegiatan, <strong>bukan</strong> nomor rekening bank. Contoh: <code class="tbl-mono">5.1.02.04.001.00003</code>
     </div>
     ${list.length === 0 ? `
       <div class="empty-state">
-        <div class="empty-state-icon">📑</div>
+        <div class="empty-state-icon">${ic('files', 28)}</div>
         <div class="empty-state-title">Belum ada kode rekening SIPD</div>
         <div class="empty-state-desc">Tambah kode rekening untuk dipakai saat membuat perjalanan dinas</div>
       </div>` : `
@@ -564,11 +565,11 @@ function renderSipd() {
                 <td>${s.tahun_anggaran||'—'}</td>
                 <td><strong>${formatRupiah(s.pagu_anggaran||0)}</strong></td>
                 <td>${s.is_active
-                  ? '<span class="badge badge-auto">✅ Aktif</span>'
+                  ? `<span class="badge badge-auto">${ic('check', 12)} Aktif</span>`
                   : '<span class="badge badge-static">⏸ Nonaktif</span>'}</td>
                 <td>
-                  <button class="btn btn-secondary btn-sm" onclick="openSipdModal('${s.id}')">✏️</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteSipd('${s.id}')">🗑️</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openSipdModal('${s.id}')">${ic('edit', 15)}</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteSipd('${s.id}')">${ic('trash', 15)}</button>
                 </td>
               </tr>`).join('')}
           </tbody>
@@ -581,7 +582,7 @@ function sipdModal(id) {
   const s = id ? DB.getArr(KEYS.sipd).find(x => x.id === id) : {};
   const v = s || {};
   const ukOptions = DB.getArr(KEYS.unitKerja).map(uk =>
-    `<option value="${uk.id}" ${v.unit_kerja_id === uk.id ? 'selected' : ''}>${uk.nama}</option>`
+    `<option value="${uk.id}" ${v.unit_kerja_id === uk.id ? 'selected' : ''}>${escapeHtml(uk.nama)}</option>`
   ).join('');
 
   return modalHTML('modal-sipd', id ? 'Edit Kode Rekening SIPD' : 'Tambah Kode Rekening SIPD', `
@@ -618,7 +619,7 @@ function sipdModal(id) {
     </div>
   `, `
     <button class="btn btn-secondary" onclick="closeModal('modal-sipd')">Batal</button>
-    <button class="btn btn-primary" onclick="saveSipd('${id||''}')">💾 Simpan</button>
+    <button class="btn btn-primary" onclick="saveSipd('${id||''}')">${ic('save', 15)} Simpan</button>
   `, true);
 }
 
@@ -665,8 +666,7 @@ function deleteSipd(id) {
   toast('Kode SIPD dipindahkan ke Trash', 'success');
 }
 
-// ─── FORMAT HELPER (fallback jika terbilang.js belum load) ─
-function formatRupiah(n) {
-  if (!n || isNaN(n)) return 'Rp 0';
-  return 'Rp ' + Number(n).toLocaleString('id-ID');
-}
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { closeModal, deletePegawai, deleteSipd, deleteUK, modalHTML, openModal, openPegawaiModal, openSipdModal, openUKModal, previewKecTarif, previewKotaTarif, renderKecamatan, renderKotaTujuan, renderPegawai, renderUnitKerja, saveAllKecamatan, saveAllKotaTujuan, savePegawai, saveSipd, saveTarif, saveUK, switchTab });
+})();

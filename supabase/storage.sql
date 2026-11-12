@@ -8,8 +8,7 @@ values (
   false,
   52428800,
   array[
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/octet-stream'
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ]
 )
 on conflict (id) do update set
@@ -33,6 +32,7 @@ create policy "sppd_templates_insert_own"
   with check (
     bucket_id = 'sppd-templates'
     and auth.uid()::text = (string_to_array(name, '/'))[1]
+    and name like '%.docx'
   );
 
 drop policy if exists "sppd_templates_update_own" on storage.objects;
@@ -45,6 +45,7 @@ create policy "sppd_templates_update_own"
   with check (
     bucket_id = 'sppd-templates'
     and auth.uid()::text = (string_to_array(name, '/'))[1]
+    and name like '%.docx'
   );
 
 drop policy if exists "sppd_templates_delete_own" on storage.objects;

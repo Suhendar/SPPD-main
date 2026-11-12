@@ -1,3 +1,4 @@
+(() => {
 /**
  * rekap.js — Rekap Rincian Perjalanan Dinas
  * Generate .xlsx dengan ExcelJS — struktur sesuai draft
@@ -32,10 +33,10 @@ function renderRekapPage() {
   if (pjdList.length === 0) {
     c.innerHTML = `
       <div class="empty-state" style="padding:80px 24px">
-        <div class="empty-state-icon">📊</div>
+        <div class="empty-state-icon">${ic('chart', 28)}</div>
         <div class="empty-state-title">Belum ada data perjalanan dinas</div>
         <div class="empty-state-desc" style="margin-bottom:20px">Buat perjalanan dinas terlebih dahulu</div>
-        <button class="btn btn-primary" onclick="navigateTo('perjalanan')">✈️ Buat Perjalanan Dinas</button>
+        <button class="btn btn-primary" onclick="navigateTo('perjalanan')">${ic('plane', 15)} Buat Perjalanan Dinas</button>
       </div>`;
     return;
   }
@@ -44,7 +45,7 @@ function renderRekapPage() {
     const tujuan  = buildTujuanText(p);
     const grand   = calcGrandTotalFull(p);
     const jLabel  = getTingkatBiaya(p.jenis_perjalanan);
-    const icon    = p.status === 'final' ? '✅' : '📝';
+    const icon    = p.status === 'final' ? `${ic('check', 13)}` : `${ic('note', 13)}`;
     return `
       <label class="rekap-pjd-row" data-jenis="${p.jenis_perjalanan}" id="rpjd-${p.id}">
         <input type="checkbox" class="rekap-chk" value="${p.id}"
@@ -52,10 +53,10 @@ function renderRekapPage() {
           onchange="onRekapChange()">
         <div style="flex:1;min-width:0;overflow:hidden">
           <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            ${icon} ${p.nomor_surat || '—'}
+            ${icon} ${escapeHtml(p.nomor_surat || '—')}
           </div>
           <div style="font-size:11px;color:var(--text-3);margin-top:2px">
-            ${formatTanggal(p.tanggal_berangkat)} · ${tujuan} · ${p.peserta?.length || 0} org
+            ${formatTanggal(p.tanggal_berangkat)} · ${escapeHtml(tujuan)} · ${p.peserta?.length || 0} org
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0;margin-left:8px">
@@ -72,14 +73,14 @@ function renderRekapPage() {
       <div>
         <div class="card mb-4">
           <div class="card-header">
-            <div class="card-icon" style="background:#F3E5F5">☑️</div>
+            <div class="card-icon" style="background:#F3E5F5">${ic('squarecheck', 20)}</div>
             <div><h3>Pilih Perjalanan Dinas</h3><p>Centang yang akan direkap</p></div>
           </div>
           <div class="card-body" style="padding:12px 16px">
 
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-              <button class="btn btn-secondary btn-sm" onclick="rekapCheckAll(true)">✅ Semua</button>
-              <button class="btn btn-secondary btn-sm" onclick="rekapCheckAll(false)">☐ Batal</button>
+              <button class="btn btn-secondary btn-sm" onclick="rekapCheckAll(true)">${ic('check', 15)} Semua</button>
+              <button class="btn btn-secondary btn-sm" onclick="rekapCheckAll(false)">${ic('square', 15)} Batal</button>
               <select class="form-control" id="rekap-jenis-filter"
                 style="font-size:12px;height:32px;padding:4px 8px;flex:1;min-width:130px"
                 onchange="rekapApplyJenisFilter()">
@@ -110,7 +111,7 @@ function renderRekapPage() {
               <div id="rekap-year-label" class="text-sm" style="color:var(--navy);margin-top:2px"></div>
             </div>
             <button class="btn btn-primary" id="btn-rekap-dl" onclick="downloadRekapXlsx()">
-              📥 Download .xlsx
+              ${ic('download', 15)} Download .xlsx
             </button>
           </div>
         </div>
@@ -119,13 +120,13 @@ function renderRekapPage() {
       <!-- ═══ KANAN: Preview ═══ -->
       <div class="card" style="min-height:320px">
         <div class="card-header">
-          <div class="card-icon" style="background:#EBF3FD">👁️</div>
+          <div class="card-icon" style="background:#EBF3FD">${ic('eye', 20)}</div>
           <div><h3>Preview Rekap</h3><p>Tampilan sebelum download</p></div>
         </div>
         <div id="rekap-preview" class="card-body"
           style="padding:12px;overflow-x:auto">
           <div class="empty-state" style="padding:40px">
-            <div class="empty-state-icon" style="font-size:28px">📋</div>
+            <div class="empty-state-icon" style="font-size:28px">${ic('clipboard', 28)}</div>
             <div class="empty-state-title" style="font-size:13px">
               Pilih perjalanan untuk preview
             </div>
@@ -182,7 +183,7 @@ function onRekapChange() {
   const yearEl   = document.getElementById('rekap-year-label');
   const preview  = document.getElementById('rekap-preview');
   const emptyHTML = `<div class="empty-state" style="padding:40px">
-    <div class="empty-state-icon" style="font-size:28px">📋</div>
+    <div class="empty-state-icon" style="font-size:28px">${ic('clipboard', 28)}</div>
     <div class="empty-state-title" style="font-size:13px">Pilih perjalanan untuk preview</div>
   </div>`;
 
@@ -309,15 +310,15 @@ function renderRekapPreview(groups) {
       dataRows += `<tr>
         <td style="${TD('center')}">${i === 0 ? g.no : ''}</td>
         <td style="${TD('center')}">${r.subNo}</td>
-        <td style="${TD()}">${r.nama}</td>
-        <td style="${TD('center')}">${r.rekening}</td>
-        <td style="${TD('center')}">${r.nip}</td>
+        <td style="${TD()}">${escapeHtml(r.nama)}</td>
+        <td style="${TD('center')}">${escapeHtml(r.rekening)}</td>
+        <td style="${TD('center')}">${escapeHtml(r.nip)}</td>
         ${showFJ ? `
-          <td${fgRowspan} style="${TD()}">${r.nomorSurat}</td>
+          <td${fgRowspan} style="${TD()}">${escapeHtml(r.nomorSurat)}</td>
           <td${fgRowspan} style="${TD('center')}">${r.jumlahHariStr}</td>
           <td${fgRowspan} style="${TD('center')}">${r.tglBerangkat}</td>
           <td${fgRowspan} style="${TD('center')}">${r.tglKembali}</td>
-          <td${fgRowspan} style="${TD()}">${r.maksud}</td>
+          <td${fgRowspan} style="${TD()}">${escapeHtml(r.maksud)}</td>
         ` : ''}
         <td style="${TD('center')}">${r.jmlHari}</td>
         <td style="${TD('right')}">${formatRupiah(r.uangHarian)}</td>
@@ -360,12 +361,12 @@ function renderRekapPreview(groups) {
       <tr>
         <td colspan="11" style="border:none"></td>
         <td colspan="4" style="border:none;padding:2px 5px;font-size:10px;
-            text-align:center;font-weight:700">${pptk.nama}</td>
+            text-align:center;font-weight:700">${escapeHtml(pptk.nama)}</td>
       </tr>
       <tr>
         <td colspan="11" style="border:none"></td>
         <td colspan="4" style="border:none;padding:2px 5px;font-size:10px;
-            text-align:center">NIP. ${pptk.nip || '—'}</td>
+            text-align:center">NIP. ${escapeHtml(pptk.nip || '—')}</td>
       </tr>`;
   }
 
@@ -376,7 +377,7 @@ function renderRekapPreview(groups) {
           ${uk.instansi_pembayar || 'PEMERINTAH KABUPATEN BOGOR'} TAHUN ANGGARAN ${tahun}
         </div>
         <div style="font-weight:700;font-size:11px">
-          ${(uk.nama || 'DINAS KEBUDAYAAN KABUPATEN BOGOR').toUpperCase()}
+          ${escapeHtml((uk.nama || 'DINAS KEBUDAYAAN KABUPATEN BOGOR').toUpperCase())}
         </div>
         <div style="font-weight:700;font-size:11px">PERJALANAN DINAS ${jenisLabel}</div>
       </div>
@@ -423,17 +424,17 @@ async function downloadRekapXlsx() {
     return toast('Library ExcelJS belum dimuat. Cek koneksi internet.', 'error');
 
   const btn = document.getElementById('btn-rekap-dl');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
 
   try {
     const groups = buildRekapGroups(ids);
     await generateRekapXlsx(groups);
-    toast('✅ File rekap berhasil didownload!', 'success', 4000);
+    toast(' File rekap berhasil didownload!', 'success', 4000);
   } catch (err) {
     console.error('[Rekap]', err);
-    toast('❌ Gagal generate: ' + err.message, 'error', 6000);
+    toast(' Gagal generate: ' + err.message, 'error', 6000);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '📥 Download .xlsx'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = `${ic('download', 14)} Download .xlsx`; }
   }
 }
 
@@ -726,3 +727,7 @@ async function generateRekapXlsx(groups) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { downloadRekapXlsx, onRekapChange, rekapApplyJenisFilter, rekapCheckAll, renderRekapPage });
+})();

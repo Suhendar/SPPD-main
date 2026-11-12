@@ -1,3 +1,4 @@
+(() => {
 // pages.js - HTML content for each page, injected by router
 
 const PAGES = {};
@@ -7,16 +8,16 @@ PAGES.dashboard = `
   <h2>Selamat Datang di SPPD Generator</h2>
   <p>Sistem generate otomatis dokumen perjalanan dinas — SPPD, Kwitansi, Surat Tugas, dan Rekap Belanja dari template .docx yang dapat dikustomisasi.</p>
   <div class="hero-actions">
-    <button class="hero-btn hero-btn-primary" onclick="navigateTo('template')">📤 Upload Template</button>
-    <button class="hero-btn hero-btn-secondary" onclick="navigateTo('panduan')">📖 Panduan Arguments</button>
+    <button class="hero-btn hero-btn-primary" onclick="navigateTo('template')">${ic('upload', 15)} Upload Template</button>
+    <button class="hero-btn hero-btn-secondary" onclick="navigateTo('panduan')">${ic('book', 15)} Panduan Arguments</button>
   </div>
 </div>
 
 <div class="stats-grid mb-6">
-  <div class="stat-card navy"><span class="stat-icon">📄</span><div class="stat-value" id="stat-templates">0</div><div class="stat-label">Template Tersimpan</div></div>
-  <div class="stat-card gold"><span class="stat-icon">✈️</span><div class="stat-value" id="stat-perjalanan">0</div><div class="stat-label">Perjalanan Dinas</div></div>
-  <div class="stat-card green"><span class="stat-icon">📦</span><div class="stat-value" id="stat-generated">0</div><div class="stat-label">Dokumen Digenerate</div></div>
-  <div class="stat-card red"><span class="stat-icon">👥</span><div class="stat-value" id="stat-pegawai">0</div><div class="stat-label">Data Pegawai</div></div>
+  <div class="stat-card navy"><span class="stat-icon">${ic('doc', 24)}</span><div class="stat-value" id="stat-templates">0</div><div class="stat-label">Template Tersimpan</div></div>
+  <div class="stat-card gold"><span class="stat-icon">${ic('plane', 24)}</span><div class="stat-value" id="stat-perjalanan">0</div><div class="stat-label">Perjalanan Dinas</div></div>
+  <div class="stat-card green"><span class="stat-icon">${ic('package', 24)}</span><div class="stat-value" id="stat-generated">0</div><div class="stat-label">Dokumen Digenerate</div></div>
+  <div class="stat-card red"><span class="stat-icon">${ic('users', 24)}</span><div class="stat-value" id="stat-pegawai">0</div><div class="stat-label">Data Pegawai</div></div>
 </div>
 
 <div id="dashboard-anggaran" class="mb-6"></div>
@@ -24,7 +25,7 @@ PAGES.dashboard = `
 <div class="grid-2">
   <div class="card">
     <div class="card-header">
-      <div class="card-icon" style="background:#EBF3FD">📋</div>
+      <div class="card-icon" style="background:#EBF3FD">${ic('clipboard', 20)}</div>
       <div><h3>Cara Kerja Sistem</h3><p>Alur penggunaan aplikasi</p></div>
     </div>
     <div class="card-body">
@@ -38,16 +39,16 @@ PAGES.dashboard = `
   </div>
   <div class="card">
     <div class="card-header">
-      <div class="card-icon" style="background:#FEF9E7">⚡</div>
+      <div class="card-icon" style="background:#FEF9E7">${ic('bolt', 20)}</div>
       <div><h3>Aksi Cepat</h3><p>Shortcut menu utama</p></div>
     </div>
     <div class="card-body">
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button class="btn btn-primary" style="justify-content:flex-start" onclick="navigateTo('template')">📤 Upload Template Baru</button>
-        <button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigateTo('panduan')">📖 Lihat Panduan Arguments</button>
-        <button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigateTo('master')">🗄️ Kelola Data Master</button>
-        <button class="btn btn-primary"   style="justify-content:flex-start" onclick="navigateTo('perjalanan')">✈️ Buat Perjalanan Dinas</button>
-        <button class="btn btn-primary"   style="justify-content:flex-start" onclick="navigateTo('generate')">⚡ Generate Dokumen</button>
+        <button class="btn btn-primary" style="justify-content:flex-start" onclick="navigateTo('template')">${ic('upload', 15)} Upload Template Baru</button>
+        <button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigateTo('panduan')">${ic('book', 15)} Lihat Panduan Arguments</button>
+        <button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigateTo('master')">${ic('db', 15)} Kelola Data Master</button>
+        <button class="btn btn-primary"   style="justify-content:flex-start" onclick="navigateTo('perjalanan')">${ic('plane', 15)} Buat Perjalanan Dinas</button>
+        <button class="btn btn-primary"   style="justify-content:flex-start" onclick="navigateTo('generate')">${ic('bolt', 15)} Generate Dokumen</button>
       </div>
     </div>
   </div>
@@ -78,132 +79,132 @@ function argSection(icon, bg, title, desc, rows, extraAlert) {
 
 PAGES.panduan = `
 <div class="alert alert-info mb-6">
-  💡 Gunakan placeholder di bawah dalam template .docx dengan format <strong>{{nama_argument}}</strong>. Sistem otomatis mengisi nilai yang sesuai saat generate dokumen.
+  ${ic('bulb', 15)} Gunakan placeholder di bawah dalam template .docx dengan format <strong>{{nama_argument}}</strong>. Sistem otomatis mengisi nilai yang sesuai saat generate dokumen.
 </div>
 <div class="card mb-6">
   <div class="card-body" style="padding:16px 22px">
     <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:12px">
-      <div class="search-bar"><span>🔍</span><input type="text" id="panduan-search" placeholder="Cari argument... (misal: nama, tanggal, total)"></div>
+      <div class="search-bar"><span>${ic('search', 15)}</span><input type="text" id="panduan-search" placeholder="Cari argument... (misal: nama, tanggal, total)"></div>
       <div class="flex gap-2" style="flex-wrap:wrap">
-        <span class="badge badge-auto">🔄 Auto-fill</span>
-        <span class="badge badge-computed">⚡ Computed</span>
-        <span class="badge badge-manual">✏️ Manual</span>
-        <span class="badge badge-loop">🔁 Loop</span>
-        <span class="badge badge-static">🔒 Static</span>
+        <span class="badge badge-auto">Auto-fill</span>
+        <span class="badge badge-computed">Computed</span>
+        <span class="badge badge-manual">${ic('edit', 12)} Manual</span>
+        <span class="badge badge-loop">Loop</span>
+        <span class="badge badge-static">Static</span>
       </div>
     </div>
   </div>
 </div>
 
-` + argSection('👤','#E8F5E9','Data Pegawai','Auto-fill dari database pegawai yang sedang login atau dipilih',[
-  ['nama_lengkap','🔄 Auto','auto','Nama lengkap pegawai beserta gelar akademik','Dr. Ridwan Said, S.STP, M.Si'],
-  ['nip','🔄 Auto','auto','Nomor Induk Pegawai (18 digit)','198209082001121001'],
-  ['jabatan','🔄 Auto','auto','Jabatan struktural / fungsional pegawai','Plt. Sekretaris Dinas'],
-  ['pangkat','🔄 Auto','auto','Pangkat pegawai','Pembina Tk.I'],
-  ['golongan','🔄 Auto','auto','Golongan ruang pegawai','IV-b'],
-  ['pangkat_golongan','⚡ Computed','computed','Gabungan pangkat dan golongan (format SPPD)','Pembina Tk.I / IV-b'],
-  ['nomor_rekening','🔄 Auto','auto','Nomor rekening bank pegawai (untuk kwitansi)','0483610003349'],
-  ['unit_kerja','🔄 Auto','auto','Nama unit kerja / SKPD pegawai','Dinas Kebudayaan Kab. Bogor'],
-]) + argSection('🏛️','#E3F2FD','Data Unit Kerja & Instansi','Auto-fill dari database unit kerja — header surat, penandatangan, dll',[
-  ['nama_dinas','🔒 Static','static','Nama dinas lengkap','DINAS KEBUDAYAAN'],
-  ['alamat_dinas','🔒 Static','static','Alamat lengkap kantor dinas','Vivo Mall Lantai 1 Jl. Raya Jakarta - Bogor Km. 50...'],
-  ['kota','🔒 Static','static','Kota/kabupaten lokasi unit kerja','Cibinong'],
-  ['skpd','🔄 Auto','auto','Nama SKPD untuk kolom pembebanan anggaran','Dinas Kebudayaan dan Pariwisata Kabupaten Bogor'],
-  ['instansi_pembayar','🔒 Static','static','Nama instansi di kwitansi baris "Sudah terima dari"','PEMERINTAH KABUPATEN BOGOR'],
-  ['pejabat_ppk','🔒 Static','static','Jabatan Pejabat Pembuat Komitmen (untuk SPPD)','Sekretaris Dinas Kebudayaan'],
-  ['nama_ppk','🔒 Static','static','Nama lengkap PPK penandatangan SPPD','Dr Ridwan Said, S.STP, M. Si.'],
-  ['nip_ppk','🔒 Static','static','NIP Pejabat Pembuat Komitmen','198209082001121001'],
-  ['nama_kepala','🔒 Static','static','Nama Kepala Dinas (penandatangan Surat Tugas)','—'],
-  ['nip_kepala','🔒 Static','static','NIP Kepala Dinas','—'],
-  ['nama_bendahara','🔒 Static','static','Nama Bendahara Pengeluaran (untuk Rekap Belanja)','YUSUF JUNAEDI'],
-  ['nip_bendahara','🔒 Static','static','NIP Bendahara Pengeluaran','198208122009011003'],
-]) + argSection('✏️','#FFF3E0','Data Perjalanan — Input Manual','Diisi oleh user saat membuat form perjalanan dinas',[
-  ['nomor','✏️ Manual','manual','Nomor surat — dipakai di semua dokumen satu sesi','800.1.11.1/1338-Sekretariat'],
-  ['kode_no','✏️ Manual','manual','Kode nomor di pojok kiri SPPD','—'],
-  ['lembar_ke','⚡ Computed','computed','Nomor lembar SPPD — otomatis 1 dan 2 saat generate','1 atau 2'],
-  ['tanggal_surat','✏️ Manual','manual','Tanggal surat dibuat (bukan tanggal berangkat)','02 Januari 2026'],
-  ['tanggal_berangkat','✏️ Manual','manual','Tanggal mulai perjalanan dinas','15 April 2026'],
-  ['tanggal_kembali','✏️ Manual','manual','Tanggal selesai / kembali dari perjalanan','15 April 2026'],
-  ['jam_mulai','✏️ Manual','manual','Jam mulai kegiatan (opsional) — format dokumen pakai titik','08.00'],
-  ['jam_selesai','✏️ Manual','manual','Jam selesai kegiatan (opsional) — format dokumen pakai titik','16.00'],
-  ['alat_angkutan','✏️ Manual','manual','Alat angkutan yang digunakan','Kendaraan Roda 4'],
-  ['tingkat_biaya','⚡ Computed','computed','Tingkat biaya perjalanan dari jenis perjalanan yang dipilih','Dalam Daerah'],
-  ['tujuan','✏️ Manual','manual','Kecamatan tujuan (dalam daerah) — bisa dioverride manual pakai nama tempat spesifik (field "Nama Tempat"), atau alamat lengkap (luar daerah/provinsi)','Kantor Kecamatan Kemang / Kecamatan Tenjolaya'],
-  ['tempat_kedudukan','🔄 Auto','auto','Tempat kedudukan / asal keberangkatan (dari unit kerja)','Sukaraja'],
-  ['maksud_perjalanan','✏️ Manual','manual','Maksud perjalanan dinas (untuk SPPD item 4)','Kegiatan Survei Pembuatan Kujang...'],
-  ['dasar','✏️ Manual','manual','Dasar penugasan (untuk Surat Tugas, teks bebas)','Dalam rangka pelaksanaan program kerja...'],
-  ['deskripsi_tugas','✏️ Manual','manual','Deskripsi tugas yang diperintahkan (untuk Surat Tugas)','Koordinasi Perencanaan Pengembangan Pariwisata...'],
-  ['kode_rekening_sipd','✏️ Manual','manual','Kode rekening kegiatan di SIPD (bukan rekening bank) — dropdown atau manual','5.1.02.04.001.00003'],
-  ['nama_pptk','✏️ Manual','manual','Nama PPTK penandatangan bagian pergerakan SPPD (pilih dari pegawai)','Romadhoni S Subekti, S.St. Par., M.M. Par.'],
-  ['nip_pptk','🔄 Auto','auto','NIP PPTK — terisi otomatis saat nama PPTK dipilih','197808172005011016'],
-]) + argSection('⚡','#EBF3FD','Computed Arguments','Dihitung otomatis oleh sistem — tidak perlu diisi manual',[
-  ['lama_perjalanan','⚡ Computed','computed','Lama perjalanan + terbilang<br><span class="text-muted text-sm">tanggal_kembali − tanggal_berangkat + 1</span>','1 (Satu) Hari'],
-  ['hari_tanggal_tugas','⚡ Computed','computed','Rangkaian hari dan tanggal untuk Surat Tugas<br><span class="text-muted text-sm">Nama hari + format tanggal lengkap</span>','Rabu, 15 April 2026'],
-  ['jam','⚡ Computed','computed','Gabungan jam mulai & selesai untuk baris "Pukul :"<br><span class="text-muted text-sm">jam_mulai s.d. jam_selesai — kalau cuma jam_mulai terisi, tampil itu saja; kosong jika keduanya kosong</span>','08.00 s.d. 16.00'],
-  ['kota_tanggal','⚡ Computed','computed','Baris kota dan tanggal untuk TTD<br><span class="text-muted text-sm">unit_kerja.kota + ", " + tanggal_surat</span>','Cibinong, 01 Oktober 2025'],
-  ['untuk_pembayaran','⚡ Computed','computed','Teks singkat "Untuk Pembayaran" di kwitansi tanpa maksud kegiatan<br><span class="text-muted text-sm">Untuk perjalanan dalam kota, tujuan memakai nama kecamatan dan bukan nama tempat</span>','Biaya Uang Harian Perjalanan Dinas Dalam Daerah ke Kecamatan Kemang'],
-  ['uang_harian','⚡ Computed','computed','Nominal uang harian per peserta<br><span class="text-muted text-sm">tarif_uang_harian[jenis_perjalanan] — bisa dioverride manual di Step 1 (field "Uang Harian")</span>','Rp 170.000'],
-  ['transport','⚡ Computed','computed','Total transport peserta jika opsi sertakan transport dicentang; selain itu kosong','—'],
-  ['total','⚡ Computed','computed','Total kwitansi per peserta sesuai pilihan transport<br><span class="text-muted text-sm">uang_harian × lama perjalanan + transport jika disertakan</span>','Rp 170.000'],
-  ['total_terbilang','⚡ Computed','computed','Total kwitansi sesuai pilihan transport dalam kata-kata Bahasa Indonesia','Seratus Tujuh Puluh Ribu Rupiah'],
-  ['grand_total','⚡ Computed','computed','Total keseluruhan semua peserta (Rekap Belanja)<br><span class="text-muted text-sm">SUM semua total peserta</span>','Rp 1.660.000'],
-  ['grand_total_terbilang','⚡ Computed','computed','Grand total dalam kata-kata Bahasa Indonesia','Satu Juta Enam Ratus Enam Puluh Ribu Rupiah'],
-  ['nominal','⚡ Computed','computed','Total kwitansi sesuai pilihan transport dalam format angka (tanpa "Rp")','170,000'],
-]) + argSection('📊','#F3E5F5','Rekap Belanja & Anggaran','Khusus template Rekap — auto-fill dari kode rekening SIPD',[
-  ['program','🔄 Auto','auto','Nama program dari kode rekening SIPD','Penunjang Urusan Pemerintahan Daerah Kabupaten/Kota'],
-  ['kegiatan','🔄 Auto','auto','Nama kegiatan dari kode rekening SIPD','Perencanaan, Penganggaran dan Evaluasi Kinerja Perangkat Daerah'],
-  ['sub_kegiatan','🔄 Auto','auto','Nama sub kegiatan dari kode rekening SIPD','Evaluasi Kinerja Perangkat Daerah'],
-  ['nomor_sppd','🔄 Auto','auto','Nomor SPPD (sama dengan {{nomor}})','800.1.11.1/1338-Sekretariat'],
-  ['tujuan_perjalanan','⚡ Computed','computed','Maksud perjalanan dan tempat tujuan untuk rekap<br><span class="text-muted text-sm">Format: Dalam rangka [maksud perjalanan] ke [tempat tujuan], tanpa tanggal</span>','Dalam rangka koordinasi pengelolaan keuangan ke BPKAD'],
-  ['tanggal_rekap','🔄 Auto','auto','Tanggal rekap belanja (sama dengan tanggal_berangkat)','30 Desember 2025'],
-  ['kota_tanggal_rekap','⚡ Computed','computed','Baris kota dan tanggal di TTD rekap belanja','Cibinong, 30 Desember 2025'],
-]) + argSection('📄','#E8F5E9','Kwitansi Per Halaman (1–3 peserta)','Argument untuk template kwitansi dengan layout 1 lembar = 1–3 peserta. Gunakan suffix _1, _2, _3 untuk masing-masing kwitansi di halaman yang sama.',
+` + argSection(ic('user', 20),'#E8F5E9','Data Pegawai','Auto-fill dari database pegawai yang sedang login atau dipilih',[
+  ['nama_lengkap','Auto','auto','Nama lengkap pegawai beserta gelar akademik','Dr. Ridwan Said, S.STP, M.Si'],
+  ['nip','Auto','auto','Nomor Induk Pegawai (18 digit)','198209082001121001'],
+  ['jabatan','Auto','auto','Jabatan struktural / fungsional pegawai','Plt. Sekretaris Dinas'],
+  ['pangkat','Auto','auto','Pangkat pegawai','Pembina Tk.I'],
+  ['golongan','Auto','auto','Golongan ruang pegawai','IV-b'],
+  ['pangkat_golongan','Computed','computed','Gabungan pangkat dan golongan (format SPPD)','Pembina Tk.I / IV-b'],
+  ['nomor_rekening','Auto','auto','Nomor rekening bank pegawai (untuk kwitansi)','0483610003349'],
+  ['unit_kerja','Auto','auto','Nama unit kerja / SKPD pegawai','Dinas Kebudayaan Kab. Bogor'],
+]) + argSection(`${ic('building', 15)}`,'#E3F2FD','Data Unit Kerja & Instansi','Auto-fill dari database unit kerja — header surat, penandatangan, dll',[
+  ['nama_dinas','Static','static','Nama dinas lengkap','DINAS KEBUDAYAAN'],
+  ['alamat_dinas','Static','static','Alamat lengkap kantor dinas','Vivo Mall Lantai 1 Jl. Raya Jakarta - Bogor Km. 50...'],
+  ['kota','Static','static','Kota/kabupaten lokasi unit kerja','Cibinong'],
+  ['skpd','Auto','auto','Nama SKPD untuk kolom pembebanan anggaran','Dinas Kebudayaan dan Pariwisata Kabupaten Bogor'],
+  ['instansi_pembayar','Static','static','Nama instansi di kwitansi baris "Sudah terima dari"','PEMERINTAH KABUPATEN BOGOR'],
+  ['pejabat_ppk','Static','static','Jabatan Pejabat Pembuat Komitmen (untuk SPPD)','Sekretaris Dinas Kebudayaan'],
+  ['nama_ppk','Static','static','Nama lengkap PPK penandatangan SPPD','Dr Ridwan Said, S.STP, M. Si.'],
+  ['nip_ppk','Static','static','NIP Pejabat Pembuat Komitmen','198209082001121001'],
+  ['nama_kepala','Static','static','Nama Kepala Dinas (penandatangan Surat Tugas)','—'],
+  ['nip_kepala','Static','static','NIP Kepala Dinas','—'],
+  ['nama_bendahara','Static','static','Nama Bendahara Pengeluaran (untuk Rekap Belanja)','YUSUF JUNAEDI'],
+  ['nip_bendahara','Static','static','NIP Bendahara Pengeluaran','198208122009011003'],
+]) + argSection(`${ic('edit', 15)}`,'#FFF3E0','Data Perjalanan — Input Manual','Diisi oleh user saat membuat form perjalanan dinas',[
+  ['nomor',`${ic('edit', 15)} Manual`,'manual','Nomor surat — dipakai di semua dokumen satu sesi','800.1.11.1/1338-Sekretariat'],
+  ['kode_no',`${ic('edit', 15)} Manual`,'manual','Kode nomor di pojok kiri SPPD','—'],
+  ['lembar_ke','Computed','computed','Nomor lembar SPPD — otomatis 1 dan 2 saat generate','1 atau 2'],
+  ['tanggal_surat',`${ic('edit', 15)} Manual`,'manual','Tanggal surat dibuat (bukan tanggal berangkat)','02 Januari 2026'],
+  ['tanggal_berangkat',`${ic('edit', 15)} Manual`,'manual','Tanggal mulai perjalanan dinas','15 April 2026'],
+  ['tanggal_kembali',`${ic('edit', 15)} Manual`,'manual','Tanggal selesai / kembali dari perjalanan','15 April 2026'],
+  ['jam_mulai',`${ic('edit', 15)} Manual`,'manual','Jam mulai kegiatan (opsional) — format dokumen pakai titik','08.00'],
+  ['jam_selesai',`${ic('edit', 15)} Manual`,'manual','Jam selesai kegiatan (opsional) — format dokumen pakai titik','16.00'],
+  ['alat_angkutan',`${ic('edit', 15)} Manual`,'manual','Alat angkutan yang digunakan','Kendaraan Roda 4'],
+  ['tingkat_biaya','Computed','computed','Tingkat biaya perjalanan dari jenis perjalanan yang dipilih','Dalam Daerah'],
+  ['tujuan',`${ic('edit', 15)} Manual`,'manual','Kecamatan tujuan (dalam daerah) — bisa dioverride manual pakai nama tempat spesifik (field "Nama Tempat"), atau alamat lengkap (luar daerah/provinsi)','Kantor Kecamatan Kemang / Kecamatan Tenjolaya'],
+  ['tempat_kedudukan','Auto','auto','Tempat kedudukan / asal keberangkatan (dari unit kerja)','Sukaraja'],
+  ['maksud_perjalanan',`${ic('edit', 15)} Manual`,'manual','Maksud perjalanan dinas (untuk SPPD item 4)','Kegiatan Survei Pembuatan Kujang...'],
+  ['dasar',`${ic('edit', 15)} Manual`,'manual','Dasar penugasan (untuk Surat Tugas, teks bebas)','Dalam rangka pelaksanaan program kerja...'],
+  ['deskripsi_tugas',`${ic('edit', 15)} Manual`,'manual','Deskripsi tugas yang diperintahkan (untuk Surat Tugas)','Koordinasi Perencanaan Pengembangan Pariwisata...'],
+  ['kode_rekening_sipd',`${ic('edit', 15)} Manual`,'manual','Kode rekening kegiatan di SIPD (bukan rekening bank) — dropdown atau manual','5.1.02.04.001.00003'],
+  ['nama_pptk',`${ic('edit', 15)} Manual`,'manual','Nama PPTK penandatangan bagian pergerakan SPPD (pilih dari pegawai)','Romadhoni S Subekti, S.St. Par., M.M. Par.'],
+  ['nip_pptk','Auto','auto','NIP PPTK — terisi otomatis saat nama PPTK dipilih','197808172005011016'],
+]) + argSection(ic('bolt', 20),'#EBF3FD','Computed Arguments','Dihitung otomatis oleh sistem — tidak perlu diisi manual',[
+  ['lama_perjalanan','Computed','computed','Lama perjalanan + terbilang<br><span class="text-muted text-sm">tanggal_kembali − tanggal_berangkat + 1</span>','1 (Satu) Hari'],
+  ['hari_tanggal_tugas','Computed','computed','Rangkaian hari dan tanggal untuk Surat Tugas<br><span class="text-muted text-sm">Nama hari + format tanggal lengkap</span>','Rabu, 15 April 2026'],
+  ['jam','Computed','computed','Gabungan jam mulai & selesai untuk baris "Pukul :"<br><span class="text-muted text-sm">jam_mulai s.d. jam_selesai — kalau cuma jam_mulai terisi, tampil itu saja; kosong jika keduanya kosong</span>','08.00 s.d. 16.00'],
+  ['kota_tanggal','Computed','computed','Baris kota dan tanggal untuk TTD<br><span class="text-muted text-sm">unit_kerja.kota + ", " + tanggal_surat</span>','Cibinong, 01 Oktober 2025'],
+  ['untuk_pembayaran','Computed','computed','Teks singkat "Untuk Pembayaran" di kwitansi tanpa maksud kegiatan<br><span class="text-muted text-sm">Untuk perjalanan dalam kota, tujuan memakai nama kecamatan dan bukan nama tempat</span>','Biaya Uang Harian Perjalanan Dinas Dalam Daerah ke Kecamatan Kemang'],
+  ['uang_harian','Computed','computed','Nominal uang harian per peserta<br><span class="text-muted text-sm">tarif_uang_harian[jenis_perjalanan] — bisa dioverride manual di Step 1 (field "Uang Harian")</span>','Rp 170.000'],
+  ['transport','Computed','computed','Total transport peserta jika opsi sertakan transport dicentang; selain itu kosong','—'],
+  ['total','Computed','computed','Total kwitansi per peserta sesuai pilihan transport<br><span class="text-muted text-sm">uang_harian × lama perjalanan + transport jika disertakan</span>','Rp 170.000'],
+  ['total_terbilang','Computed','computed','Total kwitansi sesuai pilihan transport dalam kata-kata Bahasa Indonesia','Seratus Tujuh Puluh Ribu Rupiah'],
+  ['grand_total','Computed','computed','Total keseluruhan semua peserta (Rekap Belanja)<br><span class="text-muted text-sm">SUM semua total peserta</span>','Rp 1.660.000'],
+  ['grand_total_terbilang','Computed','computed','Grand total dalam kata-kata Bahasa Indonesia','Satu Juta Enam Ratus Enam Puluh Ribu Rupiah'],
+  ['nominal','Computed','computed','Total kwitansi sesuai pilihan transport dalam format angka (tanpa "Rp")','170,000'],
+]) + argSection(ic('chart', 20),'#F3E5F5','Rekap Belanja & Anggaran','Khusus template Rekap — auto-fill dari kode rekening SIPD',[
+  ['program','Auto','auto','Nama program dari kode rekening SIPD','Penunjang Urusan Pemerintahan Daerah Kabupaten/Kota'],
+  ['kegiatan','Auto','auto','Nama kegiatan dari kode rekening SIPD','Perencanaan, Penganggaran dan Evaluasi Kinerja Perangkat Daerah'],
+  ['sub_kegiatan','Auto','auto','Nama sub kegiatan dari kode rekening SIPD','Evaluasi Kinerja Perangkat Daerah'],
+  ['nomor_sppd','Auto','auto','Nomor SPPD (sama dengan {{nomor}})','800.1.11.1/1338-Sekretariat'],
+  ['tujuan_perjalanan','Computed','computed','Maksud perjalanan dan tempat tujuan untuk rekap<br><span class="text-muted text-sm">Format: Dalam rangka [maksud perjalanan] ke [tempat tujuan], tanpa tanggal</span>','Dalam rangka koordinasi pengelolaan keuangan ke BPKAD'],
+  ['tanggal_rekap','Auto','auto','Tanggal rekap belanja (sama dengan tanggal_berangkat)','30 Desember 2025'],
+  ['kota_tanggal_rekap','Computed','computed','Baris kota dan tanggal di TTD rekap belanja','Cibinong, 30 Desember 2025'],
+]) + argSection(ic('filedesc', 20),'#E8F5E9','Kwitansi Per Halaman (1–3 peserta)','Argument untuk template kwitansi dengan layout 1 lembar = 1–3 peserta. Gunakan suffix _1, _2, _3 untuk masing-masing kwitansi di halaman yang sama.',
 [
-  ['nama_penerima_1','📄 Halaman','halaman','Nama penerima kwitansi slot 1','Romadhoni S Subekti...'],
-  ['nip_penerima_1','📄 Halaman','halaman','NIP penerima slot 1','197808172005011016'],
-  ['total_peserta_1','📄 Halaman','halaman','Total slot 1 (format Rp)','Rp 310.000'],
-  ['total_peserta_terbilang_1','📄 Halaman','halaman','Total slot 1 terbilang','Tiga Ratus Sepuluh Ribu Rupiah'],
-  ['nominal_peserta_1','📄 Halaman','halaman','Total slot 1 format angka','310,000'],
-  ['untuk_pembayaran_1','📄 Halaman','halaman','Teks "Untuk Pembayaran" slot 1','Biaya Uang Harian...'],
-  ['rekening_penerima_1','📄 Halaman','halaman','Rekening bank slot 1','0483210024282'],
-  ['jumlah_kwitansi_halaman','📄 Halaman','halaman','Jumlah peserta di halaman ini (1–3) — sistem otomatis hapus blok kosong','2'],
-  ['nama_penerima_2','📄 Halaman','halaman','Nama penerima kwitansi slot 2','—'],
-  ['nama_penerima_3','📄 Halaman','halaman','Nama penerima kwitansi slot 3','—'],
-  ['halaman_ke','📄 Halaman','halaman','Nomor halaman kwitansi (1, 2, 3...)','1'],
-  ['total_halaman','📄 Halaman','halaman','Total halaman kwitansi yang digenerate','2'],
+  ['nama_penerima_1','Halaman','halaman','Nama penerima kwitansi slot 1','Romadhoni S Subekti...'],
+  ['nip_penerima_1','Halaman','halaman','NIP penerima slot 1','197808172005011016'],
+  ['total_peserta_1','Halaman','halaman','Total slot 1 (format Rp)','Rp 310.000'],
+  ['total_peserta_terbilang_1','Halaman','halaman','Total slot 1 terbilang','Tiga Ratus Sepuluh Ribu Rupiah'],
+  ['nominal_peserta_1','Halaman','halaman','Total slot 1 format angka','310,000'],
+  ['untuk_pembayaran_1','Halaman','halaman','Teks "Untuk Pembayaran" slot 1','Biaya Uang Harian...'],
+  ['rekening_penerima_1','Halaman','halaman','Rekening bank slot 1','0483210024282'],
+  ['jumlah_kwitansi_halaman','Halaman','halaman','Jumlah peserta di halaman ini (1–3) — sistem otomatis hapus blok kosong','2'],
+  ['nama_penerima_2','Halaman','halaman','Nama penerima kwitansi slot 2','—'],
+  ['nama_penerima_3','Halaman','halaman','Nama penerima kwitansi slot 3','—'],
+  ['halaman_ke','Halaman','halaman','Nomor halaman kwitansi (1, 2, 3...)','1'],
+  ['total_halaman','Halaman','halaman','Total halaman kwitansi yang digenerate','2'],
 ],
-'<div class="alert alert-info">💡 Tidak perlu tag <strong>{{#ada_peserta_2}}</strong> di template. Sistem otomatis menghapus blok kwitansi 2 dan 3 jika peserta kurang dari 3.</div>'
-) + argSection('🔁','#EDE7F6','Loop Peserta — Kwitansi (1 file/orang)','Argument ini tersedia pada template kwitansi dengan layout <strong>1 lembar = 1 peserta</strong>. Template di-render N kali sesuai jumlah peserta.',
+`<div class="alert alert-info">${ic('bulb', 15)} Tidak perlu tag <strong>{{#ada_peserta_2}}</strong> di template. Sistem otomatis menghapus blok kwitansi 2 dan 3 jika peserta kurang dari 3.</div>`
+) + argSection(ic('repeat', 20),'#EDE7F6','Loop Peserta — Kwitansi (1 file/orang)','Argument ini tersedia pada template kwitansi dengan layout <strong>1 lembar = 1 peserta</strong>. Template di-render N kali sesuai jumlah peserta.',
 [
-  ['nama_penerima','🔁 Loop','loop','Nama lengkap peserta (iterasi saat ini)','Romadhoni S Subekti, S.St. Par., M.M. Par.'],
-  ['nip_penerima','🔁 Loop','loop','NIP peserta (iterasi saat ini)','197808172005011016'],
-  ['jabatan_penerima','🔁 Loop','loop','Jabatan peserta (iterasi saat ini)','Plt. Kepala Sub Bagian Umum'],
-  ['rekening_penerima','🔁 Loop','loop','Nomor rekening bank peserta (iterasi saat ini)','0483210024282'],
-  ['uang_harian_peserta','🔁 Loop','loop','Uang harian peserta ini (format Rp)','Rp 170.000'],
-  ['transport_peserta','🔁 Loop','loop','Total transport peserta jika opsi sertakan transport dicentang; selain itu kosong','—'],
-  ['total_peserta','🔁 Loop','loop','Total kwitansi peserta ini sesuai pilihan transport','Rp 170.000'],
-  ['total_peserta_terbilang','🔁 Loop','loop','Total kwitansi peserta ini sesuai pilihan transport dalam kata-kata Bahasa Indonesia','Seratus Tujuh Puluh Ribu Rupiah'],
-  ['nominal_peserta','🔁 Loop','loop','Total kwitansi peserta sesuai pilihan transport dalam format angka','170,000'],
-  ['urutan_peserta','🔁 Loop','loop','Nomor urut peserta dalam daftar (1, 2, 3...)','1'],
+  ['nama_penerima','Loop','loop','Nama lengkap peserta (iterasi saat ini)','Romadhoni S Subekti, S.St. Par., M.M. Par.'],
+  ['nip_penerima','Loop','loop','NIP peserta (iterasi saat ini)','197808172005011016'],
+  ['jabatan_penerima','Loop','loop','Jabatan peserta (iterasi saat ini)','Plt. Kepala Sub Bagian Umum'],
+  ['rekening_penerima','Loop','loop','Nomor rekening bank peserta (iterasi saat ini)','0483210024282'],
+  ['uang_harian_peserta','Loop','loop','Uang harian peserta ini (format Rp)','Rp 170.000'],
+  ['transport_peserta','Loop','loop','Total transport peserta jika opsi sertakan transport dicentang; selain itu kosong','—'],
+  ['total_peserta','Loop','loop','Total kwitansi peserta ini sesuai pilihan transport','Rp 170.000'],
+  ['total_peserta_terbilang','Loop','loop','Total kwitansi peserta ini sesuai pilihan transport dalam kata-kata Bahasa Indonesia','Seratus Tujuh Puluh Ribu Rupiah'],
+  ['nominal_peserta','Loop','loop','Total kwitansi peserta sesuai pilihan transport dalam format angka','170,000'],
+  ['urutan_peserta','Loop','loop','Nomor urut peserta dalam daftar (1, 2, 3...)','1'],
 ],
-'<div class="alert alert-warning">⚠️ Argument loop hanya berlaku pada template kwitansi dengan layout <strong>1 lembar = 1 peserta</strong>. Peserta diurutkan berdasarkan golongan tertinggi ke terendah.</div>'
-) + argSection('📋','#E8F8F5','Tabel Peserta — SPPD & Surat Tugas','Argument untuk menyisipkan daftar peserta di dokumen non-loop',[
-  ['peserta_table','⚡ Computed','computed','Tabel pengikut SPPD (nama | pangkat/gol | jabatan) — dirender otomatis, diurutkan golongan tertinggi','Tabel otomatis'],
-  ['jumlah_peserta','⚡ Computed','computed','Jumlah total peserta perjalanan dinas','2'],
-  ['nama_peserta_1','⚡ Computed','computed','Nama peserta urutan ke-1 (golongan tertinggi)','Romadhoni S Subekti...'],
-  ['nip_gol_peserta_1','⚡ Computed','computed','NIP / Golongan peserta ke-1 (format SPPD)','197808172005011016 / IV-a'],
-  ['jabatan_peserta_1','⚡ Computed','computed','Jabatan peserta ke-1 (kosong jika belum diisi di database)','Plt. Kepala Sub Bagian Umum'],
-]) + argSection('🔁','#EDE7F6','Loop Lampiran — Daftar Peserta Dinamis','Untuk tabel Lampiran Surat Tugas yang jumlah barisnya ikut jumlah peserta — tidak perlu bikin slot _1 _2 _3 manual. Tersedia di jalur Generate Dokumen maupun Surat Tugas AI.',
+`<div class="alert alert-warning">${ic('alert', 15)} Argument loop hanya berlaku pada template kwitansi dengan layout <strong>1 lembar = 1 peserta</strong>. Peserta diurutkan berdasarkan golongan tertinggi ke terendah.</div>`
+) + argSection(`${ic('clipboard', 15)}`,'#E8F8F5','Tabel Peserta — SPPD & Surat Tugas','Argument untuk menyisipkan daftar peserta di dokumen non-loop',[
+  ['peserta_table','Computed','computed','Tabel pengikut SPPD (nama | pangkat/gol | jabatan) — dirender otomatis, diurutkan golongan tertinggi','Tabel otomatis'],
+  ['jumlah_peserta','Computed','computed','Jumlah total peserta perjalanan dinas','2'],
+  ['nama_peserta_1','Computed','computed','Nama peserta urutan ke-1 (golongan tertinggi)','Romadhoni S Subekti...'],
+  ['nip_gol_peserta_1','Computed','computed','NIP / Golongan peserta ke-1 (format SPPD)','197808172005011016 / IV-a'],
+  ['jabatan_peserta_1','Computed','computed','Jabatan peserta ke-1 (kosong jika belum diisi di database)','Plt. Kepala Sub Bagian Umum'],
+]) + argSection(ic('repeat', 20),'#EDE7F6','Loop Lampiran — Daftar Peserta Dinamis','Untuk tabel Lampiran Surat Tugas yang jumlah barisnya ikut jumlah peserta — tidak perlu bikin slot _1 _2 _3 manual. Tersedia di jalur Generate Dokumen maupun Surat Tugas AI.',
 [
-  ['#peserta_lampiran','🔁 Loop','loop','Tag <strong>pembuka</strong> loop — taruh di sel pertama baris tabel yang mau diulang','—'],
-  ['no','🔁 Loop','loop','Nomor urut baris — diisi otomatis 1, 2, 3...','1'],
-  ['nama','🔁 Loop','loop','Nama lengkap peserta di baris ini','Romadhoni S Subekti, S.St. Par., M.M. Par.'],
-  ['nip','🔁 Loop','loop','NIP peserta di baris ini — NIP polos, tanpa golongan','197808172005011016'],
-  ['jabatan','🔁 Loop','loop','Jabatan peserta di baris ini','Plt. Kepala Sub Bagian Umum'],
-  ['/peserta_lampiran','🔁 Loop','loop','Tag <strong>penutup</strong> loop — taruh di sel terakhir baris yang sama','—'],
+  ['#peserta_lampiran','Loop','loop','Tag <strong>pembuka</strong> loop — taruh di sel pertama baris tabel yang mau diulang','—'],
+  ['no','Loop','loop','Nomor urut baris — diisi otomatis 1, 2, 3...','1'],
+  ['nama','Loop','loop','Nama lengkap peserta di baris ini','Romadhoni S Subekti, S.St. Par., M.M. Par.'],
+  ['nip','Loop','loop','NIP peserta di baris ini — NIP polos, tanpa golongan','197808172005011016'],
+  ['jabatan','Loop','loop','Jabatan peserta di baris ini','Plt. Kepala Sub Bagian Umum'],
+  ['/peserta_lampiran','Loop','loop','Tag <strong>penutup</strong> loop — taruh di sel terakhir baris yang sama','—'],
 ],
 `<div class="alert alert-info">
-  <div style="margin-bottom:8px"><strong>💡 Cara pakai di Word:</strong> buat tabel dengan <strong>satu baris data saja</strong>, lalu isi selnya seperti ini. Saat generate, baris itu digandakan sebanyak jumlah peserta.</div>
+  <div style="margin-bottom:8px"><strong>${ic('bulb', 15)} Cara pakai di Word:</strong> buat tabel dengan <strong>satu baris data saja</strong>, lalu isi selnya seperti ini. Saat generate, baris itu digandakan sebanyak jumlah peserta.</div>
   <div style="background:#fff;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="background:#f0f3f9">
@@ -220,12 +221,12 @@ PAGES.panduan = `
       </tr></tbody>
     </table>
   </div>
-  <div style="font-size:12px">⚠️ <strong>{{nip}}</strong> di dalam loop ini adalah NIP polos per baris — beda dari <strong>{{nip_gol_peserta_1}}</strong> (NIP / golongan, bernomor) dan <strong>{{nip_kepala}}</strong> / <strong>{{nip_pptk}}</strong> (NIP penandatangan). Peserta diurutkan golongan tertinggi ke terendah.</div>
+  <div style="font-size:12px">${ic('alert', 15)} <strong>{{nip}}</strong> di dalam loop ini adalah NIP polos per baris — beda dari <strong>{{nip_gol_peserta_1}}</strong> (NIP / golongan, bernomor) dan <strong>{{nip_kepala}}</strong> / <strong>{{nip_pptk}}</strong> (NIP penandatangan). Peserta diurutkan golongan tertinggi ke terendah.</div>
 </div>`
 ) + `
 <div class="arg-section">
   <div class="arg-section-header">
-    <div class="arg-section-icon" style="background:#FFF8E1">🕒</div>
+    <div class="arg-section-icon" style="background:#FFF8E1">${ic('clock', 15)}</div>
     <div>
       <div class="arg-section-title">Cara Pakai — Jam Kegiatan (baris "Pukul :")</div>
       <div class="arg-section-desc">Field opsional. Kosongkan kalau surat tidak perlu mencantumkan jam — placeholder-nya akan ikut kosong, tidak menampilkan tulisan aneh.</div>
@@ -264,7 +265,7 @@ PAGES.panduan = `
 `
 + `<div class="card" style="border-left:4px solid var(--navy)">
   <div class="card-body">
-    <h3 style="margin-bottom:14px;font-size:14px">📌 Catatan Penting Penggunaan Template</h3>
+    <h3 style="margin-bottom:14px;font-size:14px">${ic('pin', 15)} Catatan Penting Penggunaan Template</h3>
     <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text-2)">
       <div>1. Semua placeholder ditulis <strong>{{nama_argument}}</strong> — huruf kecil, underscore sebagai spasi, tanpa spasi di dalam kurung kurawal.</div>
       <div>2. Template kwitansi default: <strong>1 lembar = 1–3 peserta</strong> — gunakan <code style="background:#f0f3f9;padding:1px 5px;border-radius:3px">{{nama_penerima_1}}</code>, <code style="background:#f0f3f9;padding:1px 5px;border-radius:3px">{{nama_penerima_2}}</code>, <code style="background:#f0f3f9;padding:1px 5px;border-radius:3px">{{nama_penerima_3}}</code>. Untuk 1 file per orang, pilih layout <strong>1 lembar = 1 peserta</strong> saat upload.</div>
@@ -283,13 +284,13 @@ PAGES.template = `
   <div>
     <div class="card mb-4">
       <div class="card-header">
-        <div class="card-icon" style="background:#EBF3FD">📤</div>
+        <div class="card-icon" style="background:#EBF3FD">${ic('upload', 20)}</div>
         <div><h3>Upload Template Baru</h3><p>File .docx dengan placeholder {{argument}}</p></div>
       </div>
       <div class="card-body">
         <div class="upload-zone" id="upload-zone">
           <input type="file" class="upload-input" id="file-input" accept=".docx">
-          <div class="upload-icon">📄</div>
+          <div class="upload-icon">${ic('doc', 15)}</div>
           <div class="upload-title">Drag &amp; drop file .docx di sini</div>
           <div class="upload-desc">atau klik untuk pilih file</div>
         </div>
@@ -298,7 +299,7 @@ PAGES.template = `
     </div>
     <div class="card" id="upload-form" style="display:none">
       <div class="card-header">
-        <div class="card-icon" style="background:#E8F5E9">⚙️</div>
+        <div class="card-icon" style="background:#E8F5E9">${ic('settings', 20)}</div>
         <div><h3>Konfigurasi Template</h3><p id="tf-filename" class="font-mono" style="font-size:11px"></p></div>
       </div>
       <div class="card-body">
@@ -309,26 +310,27 @@ PAGES.template = `
         <div class="form-group">
           <label class="form-label">Jenis Dokumen</label>
           <select class="form-control" id="tf-jenis" onchange="onTemplateJenisChange()">
-            <option value="kwitansi">🧾 Kwitansi</option>
-            <option value="sppd">📋 SPPD</option>
-            <option value="surat_tugas">📝 Surat Tugas</option>
-            <option value="rekap_belanja">📊 Rekap Belanja</option>
-            <option value="custom">📁 Custom</option>
+            <option value="kwitansi"> Kwitansi</option>
+            <option value="sppd"> SPPD</option>
+            <option value="surat_tugas"> Surat Tugas</option>
+            <option value="rekap_belanja"> Rekap Belanja</option>
+            <option value="nota_dinas"> Nota Dinas</option>
+            <option value="custom"> Custom</option>
           </select>
         </div>
         <div class="grid-2">
           <div class="form-group">
             <label class="form-label">Scope</label>
             <select class="form-control" id="tf-scope">
-              <option value="global">🌐 Global (semua user)</option>
-              <option value="personal">👤 Personal (saya saja)</option>
+              <option value="global"> Global (semua user)</option>
+              <option value="personal"> Personal (saya saja)</option>
             </select>
           </div>
           <div class="form-group" id="tf-kwitansi-layout-wrap">
             <label class="form-label">Layout Kwitansi</label>
             <select class="form-control" id="tf-kwitansi-layout">
-              <option value="per_halaman">📄 1 lembar = 1–3 peserta (default)</option>
-              <option value="per_peserta">🔁 1 lembar = 1 peserta (1 file/orang)</option>
+              <option value="per_halaman"> 1 lembar = 1–3 peserta (default)</option>
+              <option value="per_peserta"> 1 lembar = 1 peserta (1 file/orang)</option>
             </select>
           </div>
           <div class="form-group" id="tf-iterable-wrap">
@@ -346,7 +348,7 @@ PAGES.template = `
         <div class="form-group">
           <label class="form-label">Placeholder Terdeteksi</label>
           <div class="chips" id="tf-placeholders"></div>
-          <div class="text-sm text-muted" style="margin-top:6px">Klik ✕ untuk hapus placeholder yang tidak relevan</div>
+          <div class="text-sm text-muted" style="margin-top:6px">Klik ${ic('x', 15)} untuk hapus placeholder yang tidak relevan</div>
         </div>
         <div class="form-group">
           <label class="form-label">Tambah Placeholder Manual</label>
@@ -357,7 +359,7 @@ PAGES.template = `
         </div>
         <div class="flex gap-2" style="justify-content:flex-end">
           <button class="btn btn-secondary" onclick="document.getElementById('upload-form').style.display='none'">Batal</button>
-          <button class="btn btn-primary" onclick="saveTemplateForm()">💾 Simpan Template</button>
+          <button class="btn btn-primary" onclick="saveTemplateForm()">${ic('save', 15)} Simpan Template</button>
         </div>
       </div>
     </div>
@@ -369,7 +371,7 @@ PAGES.template = `
     </div>
     <div id="template-list">
       <div class="empty-state">
-        <div class="empty-state-icon">📄</div>
+        <div class="empty-state-icon">${ic('doc', 28)}</div>
         <div class="empty-state-title">Belum ada template</div>
         <div class="empty-state-desc">Upload file .docx untuk mulai</div>
       </div>
@@ -379,13 +381,13 @@ PAGES.template = `
 
 PAGES.master = `
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('unit-kerja',this)">🏛️ Unit Kerja</button>
-  <button class="tab-btn" onclick="switchTab('pegawai',this)">👤 Pegawai</button>
-  <button class="tab-btn" onclick="switchTab('tarif',this)">💰 Tarif Perjalanan</button>
-  <button class="tab-btn" onclick="switchTab('kecamatan',this)">🗺️ Kecamatan &amp; Transport</button>
-  <button class="tab-btn" onclick="switchTab('kota-tujuan',this)">🏙️ Kota Tujuan</button>
-  <button class="tab-btn" onclick="switchTab('sipd',this)">📑 Kode Rekening SIPD</button>
-  <button class="tab-btn" onclick="switchTab('anggaran',this)">💼 Anggaran &amp; Koreksi</button>
+  <button class="tab-btn active" onclick="switchTab('unit-kerja',this)">${ic('building', 15)} Unit Kerja</button>
+  <button class="tab-btn" onclick="switchTab('pegawai',this)">${ic('user', 15)} Pegawai</button>
+  <button class="tab-btn" onclick="switchTab('tarif',this)">${ic('coins', 15)} Tarif Perjalanan</button>
+  <button class="tab-btn" onclick="switchTab('kecamatan',this)">${ic('map', 15)} Kecamatan &amp; Transport</button>
+  <button class="tab-btn" onclick="switchTab('kota-tujuan',this)">${ic('city', 15)} Kota Tujuan</button>
+  <button class="tab-btn" onclick="switchTab('sipd',this)">${ic('files', 15)} Kode Rekening SIPD</button>
+  <button class="tab-btn" onclick="switchTab('anggaran',this)">${ic('briefcase', 15)} Anggaran &amp; Koreksi</button>
 </div>
 <div id="tab-unit-kerja" class="tab-pane active"></div>
 <div id="tab-pegawai"    class="tab-pane"></div>
@@ -409,7 +411,7 @@ PAGES.trash = `<div id="trash-container"></div>`;
 function loadPage(pageId) {
   const container = document.getElementById('main-content');
   container.innerHTML = PAGES[pageId] ||
-    `<div class="empty-state"><div class="empty-state-icon">🚧</div>
+    `<div class="empty-state"><div class="empty-state-icon">${ic('alert', 28)}</div>
      <div class="empty-state-title">Halaman belum tersedia</div></div>`;
 
   if (pageId === 'template') {
@@ -538,12 +540,16 @@ function updateCloudBadge() {
   const el = document.getElementById('cloud-sync-badge');
   if (!el) return;
   if (DB.usesCloud()) {
-    el.textContent = '☁️ Cloud';
+    el.textContent = 'Cloud';
     el.title = 'Data tersimpan di Supabase';
     el.style.display = '';
   } else {
-    el.textContent = '💾 Lokal';
+    el.textContent = 'Lokal';
     el.title = 'Data di browser (login + Supabase untuk sinkronisasi)';
     el.style.display = '';
   }
 }
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { navigateTo });
+})();

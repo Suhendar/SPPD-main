@@ -1,3 +1,4 @@
+(() => {
 /**
  * surat-tugas-ai.js — Modul Surat Tugas dengan AI (Gemini)
  *
@@ -46,9 +47,9 @@ function renderSuratTugasAI() {
 
   c.innerHTML = `
     <div class="tabs" id="stai-tabs">
-      <button class="tab-btn active" onclick="staiSwitchTab('ai', this)">🤖 Draft dengan AI</button>
-      <button class="tab-btn"        onclick="staiSwitchTab('manual', this)">✏️ Tulis Manual</button>
-      <button class="tab-btn"        onclick="staiSwitchTab('riwayat', this)">📋 Riwayat</button>
+      <button class="tab-btn active" onclick="staiSwitchTab('ai', this)">${ic('sparkles', 15)} Draft dengan AI</button>
+      <button class="tab-btn" onclick="staiSwitchTab('manual', this)">${ic('edit', 15)} Tulis Manual</button>
+      <button class="tab-btn" onclick="staiSwitchTab('riwayat', this)">${ic('clipboard', 15)} Riwayat</button>
     </div>
     <div id="stai-tab-ai"      class="stai-pane active"></div>
     <div id="stai-tab-manual"  class="stai-pane"></div>
@@ -91,7 +92,7 @@ function staiRenderAI(pane) {
       <div>
         <div class="card mb-4">
           <div class="card-header">
-            <div class="card-icon" style="background:#E8F0FE">🤖</div>
+            <div class="card-icon" style="background:#E8F0FE">${ic('sparkles', 20)}</div>
             <div><h3>Input untuk AI</h3><p>Isi ringkas, Gemini akan formalkan</p></div>
           </div>
           <div class="card-body">
@@ -103,13 +104,13 @@ function staiRenderAI(pane) {
                   <input type="radio" name="stai-mode" value="baru"
                     ${f.mode==='baru'?'checked':''}
                     onchange="STAI.form.mode='baru';staiToggleExisting()">
-                  ✨ Buat dari Awal
+                  ${ic('sparkles', 15)} Buat dari Awal
                 </label>
                 <label class="stai-radio ${f.mode==='perbaiki'?'active':''}">
                   <input type="radio" name="stai-mode" value="perbaiki"
                     ${f.mode==='perbaiki'?'checked':''}
                     onchange="STAI.form.mode='perbaiki';staiToggleExisting()">
-                  🔧 Perbaiki Teks
+                  ${ic('settings', 15)} Perbaiki Teks
                 </label>
               </div>
             </div>
@@ -125,7 +126,7 @@ function staiRenderAI(pane) {
             <div class="form-group">
               <label class="form-label">Keperluan / Kegiatan *</label>
               <input class="form-control" id="stai-keperluan"
-                value="${f.keperluan||''}"
+                value="${escapeHtml(f.keperluan||'')}"
                 placeholder="cth: Koordinasi pengembangan pariwisata"
                 oninput="STAI.form.keperluan=this.value">
               <div class="form-text">Tulis singkat — AI yang akan formalkan</div>
@@ -134,7 +135,7 @@ function staiRenderAI(pane) {
             <div class="form-group">
               <label class="form-label">Tujuan / Instansi yang Dikunjungi</label>
               <input class="form-control" id="stai-tujuan"
-                value="${f.tujuan_instansi||''}"
+                value="${escapeHtml(f.tujuan_instansi||'')}"
                 placeholder="cth: Dinas Pariwisata Prov. Jawa Barat, Bandung"
                 oninput="STAI.form.tujuan_instansi=this.value">
             </div>
@@ -165,8 +166,8 @@ function staiRenderAI(pane) {
                         ${f.peserta_ids.includes(p.id)?'checked':''}
                         onchange="staiTogglePeserta('${p.id}', this.checked)">
                       <div>
-                        <div style="font-weight:600;font-size:13px">${p.nama_lengkap}</div>
-                        <div class="text-muted text-sm">${p.jabatan||''} ${p.golongan?'· '+p.golongan:''}</div>
+                        <div style="font-weight:600;font-size:13px">${escapeHtml(p.nama_lengkap)}</div>
+                        <div class="text-muted text-sm">${escapeHtml(p.jabatan||'')} ${p.golongan?'· '+escapeHtml(p.golongan):''}</div>
                       </div>
                     </label>`).join('')}
               </div>
@@ -174,7 +175,7 @@ function staiRenderAI(pane) {
 
             <button class="btn btn-primary" style="width:100%;justify-content:center"
               id="stai-btn-generate" onclick="staiGenerate()">
-              ⚡ Generate dengan Gemini
+              ${ic('bolt', 15)} Generate dengan Gemini
             </button>
             <div id="stai-gen-status" style="margin-top:8px"></div>
           </div>
@@ -185,7 +186,7 @@ function staiRenderAI(pane) {
       <div>
         <div class="card mb-4" id="stai-output-card">
           <div class="card-header">
-            <div class="card-icon" style="background:#E8F5E9">✍️</div>
+            <div class="card-icon" style="background:#E8F5E9">${ic('edit', 20)}</div>
             <div><h3>Hasil Draft AI</h3><p>Review & edit sebelum disimpan</p></div>
           </div>
           <div class="card-body">
@@ -193,18 +194,18 @@ function staiRenderAI(pane) {
               <label class="form-label">Dasar Penugasan</label>
               <textarea class="form-control" id="stai-out-dasar" rows="4"
                 placeholder="Klik 'Generate dengan Gemini' untuk mengisi..."
-                oninput="STAI.form.dasar=this.value">${f.dasar||''}</textarea>
+                oninput="STAI.form.dasar=this.value">${escapeHtml(f.dasar||'')}</textarea>
             </div>
             <div class="form-group">
               <label class="form-label">Deskripsi / Isi Perintah Tugas</label>
               <textarea class="form-control" id="stai-out-deskripsi" rows="6"
                 placeholder="Hasil Gemini akan muncul di sini..."
-                oninput="STAI.form.deskripsi_tugas=this.value">${f.deskripsi_tugas||''}</textarea>
+                oninput="STAI.form.deskripsi_tugas=this.value">${escapeHtml(f.deskripsi_tugas||'')}</textarea>
             </div>
             ${f.dasar ? `
             <div class="flex gap-2 justify-end">
-              <button class="btn btn-secondary btn-sm" onclick="staiGenerate()">🔄 Generate Ulang</button>
-              <button class="btn btn-ghost btn-sm" onclick="staiClearOutput()">✕ Hapus Hasil</button>
+              <button class="btn btn-secondary btn-sm" onclick="staiGenerate()">${ic('refresh', 15)} Generate Ulang</button>
+              <button class="btn btn-ghost btn-sm" onclick="staiClearOutput()">${ic('x', 15)} Hapus Hasil</button>
             </div>` : ''}
           </div>
         </div>
@@ -223,7 +224,7 @@ function staiRenderManual(pane) {
   pane.innerHTML = `
     <div class="card mb-4">
       <div class="card-header">
-        <div class="card-icon" style="background:#FFF3E0">✏️</div>
+        <div class="card-icon" style="background:#FFF3E0">${ic('edit', 20)}</div>
         <div><h3>Tulis Manual</h3><p>Isi langsung tanpa AI</p></div>
       </div>
       <div class="card-body">
@@ -231,13 +232,13 @@ function staiRenderManual(pane) {
           <label class="form-label">Dasar Penugasan</label>
           <textarea class="form-control" id="stai-man-dasar" rows="4"
             placeholder="Dalam rangka pelaksanaan program kerja Dinas..."
-            oninput="STAI.form.dasar=this.value">${f.dasar||''}</textarea>
+            oninput="STAI.form.dasar=this.value">${escapeHtml(f.dasar||'')}</textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Deskripsi / Isi Perintah Tugas</label>
           <textarea class="form-control" id="stai-man-deskripsi" rows="6"
             placeholder="Koordinasi Perencanaan Pengembangan Pariwisata ke..."
-            oninput="STAI.form.deskripsi_tugas=this.value">${f.deskripsi_tugas||''}</textarea>
+            oninput="STAI.form.deskripsi_tugas=this.value">${escapeHtml(f.deskripsi_tugas||'')}</textarea>
         </div>
       </div>
     </div>
@@ -253,7 +254,7 @@ function staiBottomFormHTML(f) {
     ? templates.map(t => {
       const hasFile = typeof TemplateStorage !== 'undefined' && TemplateStorage.hasFile(t);
       const disabled = hasFile ? '' : 'disabled';
-      const label = `${t.nama}${t.scope==='global'?' 🌐':''}${hasFile ? '' : ' (file belum tersambung)'}`;
+      const label = `${escapeHtml(t.nama)}${t.scope==='global'?' (Global)':''}${hasFile ? '' : ' (file belum tersambung)'}`;
       return `<option value="${t.id}" ${f.template_id===t.id?'selected':''} ${disabled}>${label}</option>`;
     }).join('')
     : '<option value="">— Belum ada template surat_tugas —</option>';
@@ -261,7 +262,7 @@ function staiBottomFormHTML(f) {
   return `
     <div class="card">
       <div class="card-header">
-        <div class="card-icon" style="background:#EBF3FD">📋</div>
+        <div class="card-icon" style="background:#EBF3FD">${ic('clipboard', 20)}</div>
         <div><h3>Data Surat & Generate</h3><p>Lengkapi, simpan, atau langsung download</p></div>
       </div>
       <div class="card-body">
@@ -269,7 +270,7 @@ function staiBottomFormHTML(f) {
           <div class="form-group">
             <label class="form-label">Nomor Surat *</label>
             <input class="form-control" id="stai-nomor"
-              value="${f.nomor_surat||''}"
+              value="${escapeHtml(f.nomor_surat||'')}"
               placeholder="800.1.11.1/xxx-Sekretariat"
               oninput="STAI.form.nomor_surat=this.value">
           </div>
@@ -303,17 +304,17 @@ function staiBottomFormHTML(f) {
             ${templOpts}
           </select>
           ${templates.length === 0
-            ? '<div class="form-text">⚠️ Belum ada template jenis "surat_tugas". <a href="#" onclick="navigateTo(\'template\');return false">Upload di Kelola Template →</a></div>'
+            ? `<div class="form-text">${ic('alert', 15)} Belum ada template jenis "surat_tugas". <a href="#" onclick="navigateTo('template');return false">Upload di Kelola Template →</a></div>`
             : '<div class="form-text">Template bertanda file belum tersambung perlu diupload ulang atau pilih template lain.</div>'}
         </div>
         <div class="flex gap-2" style="margin-top:4px">
           <button class="btn btn-secondary" style="flex:1;justify-content:center"
             onclick="staiSimpan()">
-            💾 Simpan ke Riwayat
+            ${ic('save', 15)} Simpan ke Riwayat
           </button>
           <button class="btn btn-primary" style="flex:1;justify-content:center"
             onclick="staiGenerateDocx()">
-            📥 Generate & Download .docx
+            ${ic('download', 15)} Generate & Download .docx
           </button>
         </div>
       </div>
@@ -341,33 +342,33 @@ function staiRenderRiwayat(pane) {
 
     ${list.length === 0 ? `
       <div class="empty-state" style="padding:60px 24px">
-        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-icon">${ic('clipboard', 28)}</div>
         <div class="empty-state-title">Belum ada riwayat</div>
         <div class="empty-state-desc">Buat surat tugas baru dari tab AI atau Manual</div>
       </div>` : list.map(s => `
       <div class="card mb-4">
         <div class="card-header" style="background:var(--surface-2)">
           <div style="flex:1">
-            <div style="font-weight:800;font-size:14px">${s.nomor_surat || '—'}</div>
+            <div style="font-weight:800;font-size:14px">${escapeHtml(s.nomor_surat || '—')}</div>
             <div class="pjd-meta" style="margin-top:4px">
-              <span>📅 ${s.tanggal_surat ? formatTanggal(s.tanggal_surat) : '—'}</span>
-              <span>📍 ${s.tujuan_instansi || '—'}</span>
-              <span>👥 ${(s.peserta_ids||[]).length} peserta</span>
+              <span>${ic('calendar', 15)} ${s.tanggal_surat ? formatTanggal(s.tanggal_surat) : '—'}</span>
+              <span>${ic('mappin', 15)} ${escapeHtml(s.tujuan_instansi || '—')}</span>
+              <span>${ic('users', 15)} ${(s.peserta_ids||[]).length} peserta</span>
               <span style="color:${s.source==='ai'?'#2980B9':'#666'}">
-                ${s.source==='ai'?'🤖 AI':'✏️ Manual'}
+                ${s.source==='ai'?`${ic('sparkles', 15)} AI`:`${ic('edit', 15)} Manual`}
               </span>
             </div>
           </div>
           <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm" onclick="staiEdit('${s.id}')">✏️ Edit</button>
-            <button class="btn btn-primary btn-sm" onclick="staiDownloadFromHistory('${s.id}')">📥</button>
-            <button class="btn btn-danger btn-sm" onclick="staiHapus('${s.id}')">🗑️</button>
+            <button class="btn btn-secondary btn-sm" onclick="staiEdit('${s.id}')">${ic('edit', 15)} Edit</button>
+            <button class="btn btn-primary btn-sm" onclick="staiDownloadFromHistory('${s.id}')">${ic('download', 15)}</button>
+            <button class="btn btn-danger btn-sm" onclick="staiHapus('${s.id}')">${ic('trash', 15)}</button>
           </div>
         </div>
         <div class="card-body" style="padding:12px 20px">
           <div style="font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Dasar</div>
           <div style="font-size:13px;color:var(--text);line-height:1.6;opacity:.85">
-            ${(s.dasar||'—').substring(0,180)}${(s.dasar||'').length>180?'...':''}
+            ${escapeHtml((s.dasar||'—').substring(0,180))}${(s.dasar||'').length>180?'...':''}
           </div>
         </div>
       </div>`).join('')}`;
@@ -382,10 +383,15 @@ async function staiGenerate() {
   if (STAI.isGenerating) return;
 
   STAI.isGenerating = true;
+  const aiSession = (typeof Auth !== 'undefined') ? await Auth.getSession().catch(() => null) : null;
+  if (!aiSession?.access_token) {
+    STAI.isGenerating = false;
+    return toast('Sesi berakhir. Login ulang untuk memakai fitur AI.', 'error');
+  }
   const btn = document.getElementById('stai-btn-generate');
   const status = document.getElementById('stai-gen-status');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Menghubungi Gemini...'; }
-  if (status) status.innerHTML = '<div class="alert alert-info">🤖 Gemini sedang menyusun draft surat...</div>';
+  if (btn) { btn.disabled = true; btn.textContent = 'Menghubungi Gemini...'; }
+  if (status) status.innerHTML = `<div class="alert alert-info">${ic('sparkles', 15)} Gemini sedang menyusun draft surat...</div>`;
 
   // Build peserta data untuk prompt
   const pegawaiAll = DB.getArr(KEYS.pegawai);
@@ -399,19 +405,40 @@ async function staiGenerate() {
     : '';
 
   try {
-    const res = await fetch('/api/gemini', {
-      method : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({
-        mode            : f.mode,
-        keperluan       : f.keperluan,
-        tujuan_instansi : f.tujuan_instansi,
-        peserta         : pesertaData,
-        tanggal         : tanggalStr,
-        teks_existing   : f.teks_existing,
-      }),
+    const reqBody = JSON.stringify({
+      mode            : f.mode,
+      keperluan       : f.keperluan,
+      tujuan_instansi : f.tujuan_instansi,
+      peserta         : pesertaData,
+      tanggal         : tanggalStr,
+      teks_existing   : f.teks_existing,
     });
+    let res = await fetch('/api/gemini', {
+      method : 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + aiSession.access_token,
+      },
+      body   : reqBody,
+    });
+    if (res.status === 401 && typeof Auth !== 'undefined' && typeof Auth.refreshSession === 'function') {
+      const refreshed = await Auth.refreshSession();
+      if (refreshed?.access_token) {
+        res = await fetch('/api/gemini', {
+          method : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + refreshed.access_token,
+          },
+          body   : reqBody,
+        });
+      }
+    }
 
+    const ctypeA = res.headers.get('content-type') || '';
+    if (!ctypeA.includes('application/json')) {
+      throw new Error('Backend AI tidak jalan di server lokal ini. Pakai scripts/dev-server.py (terus ke Vercel) atau isi manual.');
+    }
     const data = await res.json().catch(() => ({
       error: 'Server mengembalikan respons yang tidak bisa dibaca',
     }));
@@ -434,18 +461,18 @@ async function staiGenerate() {
       const alertType = data.fallback ? 'alert-warning' : 'alert-success';
       const message = data.fallback
         ? (data.warning || 'Kuota Gemini sedang penuh. Draft sementara dibuat otomatis dan bisa diedit.')
-        : '✅ Draft berhasil dibuat. Silakan review dan edit sesuai kebutuhan.';
+        : `${ic('check', 15)} Draft berhasil dibuat. Silakan review dan edit sesuai kebutuhan.`;
       status.innerHTML = `<div class="alert ${alertType}">${message}</div>`;
     }
     toast(data.fallback ? 'Draft sementara berhasil dibuat' : 'Draft AI berhasil dibuat', data.fallback ? 'warning' : 'success');
 
   } catch (err) {
     console.warn(err);
-    if (status) status.innerHTML = `<div class="alert alert-warning">⚠️ ${err.message}</div>`;
+    if (status) status.innerHTML = `<div class="alert alert-warning">${ic('alert', 15)} ${err.message}</div>`;
     toast('Gagal: ' + err.message, 'error');
   } finally {
     STAI.isGenerating = false;
-    if (btn) { btn.disabled = false; btn.textContent = '⚡ Generate dengan Gemini'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = `${ic('bolt', 15)} Generate dengan Gemini`; }
   }
 }
 
@@ -542,7 +569,6 @@ async function staiGenerateDocx() {
       delimiters    : { start: '{{', end: '}}' },
       nullGetter    : () => '',
     });
-    console.log('DEBUG peserta_lampiran (surat-tugas-ai):', args.peserta_lampiran); // TODO: hapus setelah debug
     doc.render(args);
 
     const out  = doc.getZip().generate({ type: 'arraybuffer' });
@@ -555,7 +581,7 @@ async function staiGenerateDocx() {
 
     // Auto-simpan ke riwayat
     staiSimpan();
-    toast('✅ Dokumen berhasil digenerate!', 'success');
+    toast(' Dokumen berhasil digenerate!', 'success');
 
   } catch (err) {
     console.error(err);
@@ -589,9 +615,10 @@ function staiBuildArgs() {
     .sort((a, b) => golonganToNum(b.golongan) - golonganToNum(a.golongan));
 
   // ── Indexed peserta (sesuai panduan: nama_peserta_1 dst) ─
-  // Generate 10 slot: kosong string jika tidak ada peserta di posisi itu
+  // Minimal 10 slot (kosong string jika tak ada peserta), tanpa batas atas
   const indexed = {};
-  for (let i = 1; i <= 10; i++) {
+  const slotCount = Math.max(peserta.length, 10);
+  for (let i = 1; i <= slotCount; i++) {
     const p = peserta[i - 1] || null;
     indexed[`nama_peserta_${i}`]     = p ? p.nama_lengkap || '' : '';
     indexed[`nip_gol_peserta_${i}`]  = p ? [p.nip, p.golongan].filter(Boolean).join(' / ') : '';
@@ -706,3 +733,7 @@ function staiHapus(id) {
   staiRenderRiwayat(document.getElementById('stai-tab-riwayat'));
   toast('Surat dipindahkan ke Trash', 'success');
 }
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { STAI, renderSuratTugasAI, staiClearOutput, staiToggleExisting, staiDownloadFromHistory, staiEdit, staiGenerate, staiGenerateDocx, staiHapus, staiSimpan, staiSwitchTab, staiTogglePeserta });
+})();

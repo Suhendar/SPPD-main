@@ -1,3 +1,4 @@
+(() => {
 /**
  * terbilang.js
  * Konversi angka ke kata-kata Bahasa Indonesia
@@ -159,3 +160,7 @@ function golonganToNum(golongan) {
                 'I-d':5,'I-c':4,'I-b':3,'I-a':2 };
   return map[golongan.trim()] || 0;
 }
+
+// ___ PUBLIC API (sengaja global; sisanya privat file ini) ___
+Object.assign(globalThis, { BULAN, formatHariTanggalTugas, formatJam, formatNominalDoc, formatRupiah, formatTanggal, golonganToNum, hitungLama, namaHari, terbilang, terbilangHari });
+})();
